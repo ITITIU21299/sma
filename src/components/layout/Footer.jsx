@@ -1,0 +1,43 @@
+import Link from "next/link";
+
+export default function Footer() {
+  return (
+    <footer className="bg-primary text-primary-foreground py-8 mt-auto">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 className="text-lg font-bold mb-2">School Management System</h3>
+          </div>
+          <div>
+            <h6 className="font-semibold mb-2">Quick Links</h6>
+            <div className="space-y-1 text-sm">
+              <Link
+                href="https://github.com/ITITIU21299/SchoolManagement"
+                target="_blank"
+                className="block hover:underline"
+              >
+                About
+              </Link>
+              <Link href="/privacy" target="_blank" className="block hover:underline">
+                Privacy
+              </Link>
+              <Link href="/terms" target="_blank" className="block hover:underline">
+                Terms
+              </Link>
+            </div>
+          </div>
+          <div>
+            <h6 className="font-semibold mb-2">Contact</h6>
+            <p className="text-sm">schoolmanagementad@gmail.com</p>
+            <p className="text-sm">0123456789</p>
+          </div>
+        </div>
+        <hr className="my-4 opacity-25" />
+        <div className="text-center text-sm">
+          <p>&copy;2024 School Management System. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
