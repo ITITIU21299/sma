@@ -87,7 +87,7 @@
                 <div class="col-md-4 mb-4">
                     <div class="card">
                         <div class="card-body text-center">
-                            <img src="imgs/logo.png" alt="School Logo" class="mb-3" style="height: 150px; width: 150px;">
+                            <img src="../../../public/logo.png" alt="School Logo" class="mb-3" style="height: 150px; width: 150px;">
                             <h5 class="card-title">${staff.getName()}</h5>
                             <p class="card-text">Staff ID: ${staff.getStaffId()}</p>
                             <p class="card-text">Email: ${staff.getEmail()}</p>

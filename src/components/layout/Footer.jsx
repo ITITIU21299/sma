@@ -1,12 +1,23 @@
-import Link from "next/link";
+import Image from 'next/image'
+import logo from '../../../public/logo.png'
+import Link from 'next/link'
 
 export default function Footer() {
   return (
-    <footer className="bg-primary text-primary-foreground py-8 mt-auto">
+    <footer className="bg-primary text-primary-foreground py-4 mt-auto">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center font-montserrat">
           <div>
-            <h3 className="text-lg font-bold mb-2">School Management System</h3>
+            <h3 className="text-base font-bold mb-2">
+              School Management System
+            </h3>
+            <Image
+              src={logo}
+              alt="School Management System Logo"
+              width={100}
+              height={100}
+              className="mx-auto"
+            />
           </div>
           <div>
             <h6 className="font-semibold mb-2">Quick Links</h6>
@@ -18,10 +29,18 @@ export default function Footer() {
               >
                 About
               </Link>
-              <Link href="/privacy" target="_blank" className="block hover:underline">
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="block hover:underline"
+              >
                 Privacy
               </Link>
-              <Link href="/terms" target="_blank" className="block hover:underline">
+              <Link
+                href="/terms"
+                target="_blank"
+                className="block hover:underline"
+              >
                 Terms
               </Link>
             </div>
@@ -33,11 +52,10 @@ export default function Footer() {
           </div>
         </div>
         <hr className="my-4 opacity-25" />
-        <div className="text-center text-sm">
-          <p>&copy;2024 School Management System. All rights reserved.</p>
+        <div className="text-center text-sm font-montserrat">
+          <p>&copy;2025 School Management System. All rights reserved.</p>
         </div>
       </div>
     </footer>
-  );
+  )
 }
-

@@ -11,14 +11,14 @@
     </head>
     <body>
         <div class="background-container">
-            <img src="imgs/login-background.jpg" alt="Background" style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: -1;">
+            <img src="../../../public/login-background.jpg" alt="Background" style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: -1;">
             <div class="container">
                 <div class="row justify-content-center align-items-center min-vh-100">
                     <div class="col-md-6 col-lg-4">
                         <div class="card shadow">
                             <div class="card-body">
                                 <div class="text-center mb-4">
-                                    <img src="imgs/logo.png" alt="School Logo" class="mb-3" style="height: 80px; width: 80px;">
+                                    <img src="../../../public/logo.png" alt="School Logo" class="mb-3" style="height: 80px; width: 80px;">
                                     <h2 class="card-title">School Management System</h2>
                                 </div>
                                 <form method="post" action="Login">
