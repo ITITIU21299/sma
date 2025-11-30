@@ -13,14 +13,16 @@ export default function StaffDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/staff/dashboard");
-        // const data = await response.json();
-        
-        // Placeholder data
-        setStaff({ name: "Staff Name" });
-        setTotalStudents(150);
-        setTotalClasses(5);
+        const response = await fetch("/api/staff/dashboard");
+        const data = await response.json();
+
+        if (data.success) {
+          setStaff({ name: data.staff?.full_name || "Staff" });
+          setTotalStudents(data.stats?.totalStudents || 0);
+          setTotalClasses(data.stats?.totalClasses || 0);
+        } else {
+          console.error("Error fetching dashboard data:", data.error);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

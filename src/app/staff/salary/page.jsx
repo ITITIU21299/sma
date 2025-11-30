@@ -12,18 +12,28 @@ export default function StaffSalaryPage() {
   useEffect(() => {
     const fetchSalaries = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/staff/salary");
-        // const data = await response.json();
-        
-        // Placeholder data
-        const mockSalaries = [
-          new Salary("10000000", "July", "2024", "2024-07-31", "paid"),
-          new Salary("10000000", "August", "2024", "2024-08-31", "pending"),
-        ];
-        setSalaries(mockSalaries);
+        const response = await fetch("/api/staff/salary");
+        const data = await response.json();
+
+        if (data.success && data.salaries) {
+          const salaryObjects = data.salaries.map(
+            (sal) =>
+              new Salary(
+                sal.amount.toString(),
+                sal.month,
+                sal.year,
+                sal.date,
+                sal.status
+              )
+          );
+          setSalaries(salaryObjects);
+        } else {
+          console.error("Error fetching salaries:", data.error);
+          setSalaries([]);
+        }
       } catch (error) {
         console.error("Error fetching salaries:", error);
+        setSalaries([]);
       } finally {
         setLoading(false);
       }

@@ -32,18 +32,18 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch("/api/auth/change-password", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ currentPassword, newPassword }),
-      // });
-      
-      // if (!response.ok) {
-      //   const data = await response.json();
-      //   setError(data.error || "Failed to change password");
-      //   return;
-      // }
+      const response = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to change password");
+        return;
+      }
 
       setSuccess(true);
       setCurrentPassword("");

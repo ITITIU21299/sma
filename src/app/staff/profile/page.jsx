@@ -14,20 +14,22 @@ export default function StaffProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/staff/profile");
-        // const data = await response.json();
-        
-        // Placeholder data
-        setStaff({
-          staffId: "ST001",
-          name: "Staff Name",
-          email: "staff@example.com",
-          phone: "0123456789",
-          address: "123 Main St",
-          qualification: "Master's Degree",
-          joiningDate: "2020-01-01",
-        });
+        const response = await fetch("/api/staff/profile");
+        const data = await response.json();
+
+        if (data.success && data.staff) {
+          setStaff({
+            staffId: data.staff.staff_id || data.staff.id,
+            name: data.staff.full_name,
+            email: data.staff.email,
+            phone: data.staff.phone || "",
+            department: data.staff.department || "",
+            hireDate: data.staff.hire_date || "",
+            createdAt: data.staff.created_at || "",
+          });
+        } else {
+          console.error("Error fetching profile:", data.error);
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -72,16 +74,12 @@ export default function StaffProfilePage() {
               <Input value={staff?.phone || ""} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
-              <Input value={staff?.address || ""} disabled />
+              <Label>Department</Label>
+              <Input value={staff?.department || ""} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Qualification</Label>
-              <Input value={staff?.qualification || ""} disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Joining Date</Label>
-              <Input value={staff?.joiningDate || ""} disabled />
+              <Label>Hire Date</Label>
+              <Input value={staff?.hireDate || ""} disabled />
             </div>
           </div>
           <div className="mt-6">
@@ -94,4 +92,3 @@ export default function StaffProfilePage() {
     </div>
   );
 }
-
