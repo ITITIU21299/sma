@@ -12,18 +12,35 @@ export default function StudentExamSchedulePage() {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/student/exam-schedule");
-        // const data = await response.json();
-        
-        // Placeholder data
-        const mockExams = [
-          new Exam("Mathematics", "2024-08-20", "Week 1", "08:00", "10:00", "Room 101", "1", "2024"),
-          new Exam("Physics", "2024-08-22", "Week 1", "08:00", "10:00", "Room 102", "1", "2024"),
-        ];
-        setExams(mockExams);
+        const response = await fetch("/api/student/exam-schedule");
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          // Transform API data to Exam model format
+          const examRecords = data.data.map((exam) => {
+            // Calculate week from exam date (rough estimate)
+            const examDate = new Date(exam.exam_date);
+            const week = Math.ceil((examDate - new Date(exam.year, 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+            
+            return new Exam(
+              exam.subject_name,
+              exam.exam_date,
+              `Week ${week}`,
+              "08:00", // Default start time
+              "10:00", // Default end time
+              "TBA", // Room not in exam table, would need to join with timetable
+              exam.semester || "1",
+              exam.year?.toString() || new Date().getFullYear().toString()
+            );
+          });
+          setExams(examRecords);
+        } else {
+          console.error("Error fetching exam schedule:", data.error);
+          setExams([]);
+        }
       } catch (error) {
         console.error("Error fetching exam schedule:", error);
+        setExams([]);
       } finally {
         setLoading(false);
       }

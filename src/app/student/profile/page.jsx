@@ -14,20 +14,20 @@ export default function StudentProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/student/profile");
-        // const data = await response.json();
-        
-        // Placeholder data
-        setStudent({
-          studentId: "S001",
-          name: "Student Name",
-          email: "student@example.com",
-          dateOfBirth: "2000-01-01",
-          gender: "Male",
-          classId: "Class A",
-          academicYear: "2024",
-        });
+        const response = await fetch("/api/student/profile");
+        const data = await response.json();
+
+        if (data.success && data.student) {
+          setStudent({
+            studentId: data.student.student_id || data.student.id,
+            name: data.student.full_name,
+            email: data.student.email,
+            dateOfBirth: data.student.date_of_birth || "",
+            classLevel: data.student.class_level || "",
+          });
+        } else {
+          console.error("Error fetching profile:", data.error);
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
@@ -72,16 +72,8 @@ export default function StudentProfilePage() {
               <Input value={student?.dateOfBirth || ""} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Gender</Label>
-              <Input value={student?.gender || ""} disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Class</Label>
-              <Input value={student?.classId || ""} disabled />
-            </div>
-            <div className="space-y-2">
-              <Label>Academic Year</Label>
-              <Input value={student?.academicYear || ""} disabled />
+              <Label>Class Level</Label>
+              <Input value={student?.classLevel || ""} disabled />
             </div>
           </div>
           <div className="mt-6">

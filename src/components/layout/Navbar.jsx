@@ -63,6 +63,7 @@ export default function Navbar({ userRole, userName }) {
     },
     { href: '/student/schedule', label: 'Room Schedule', icon: Calendar },
     { href: '/student/attendance', label: 'Attendance', icon: CalendarCheck },
+    { href: '/student/marks', label: 'Marks', icon: ClipboardList },
     { href: '/student/feedback', label: 'Feedback', icon: MessageSquare },
   ]
 

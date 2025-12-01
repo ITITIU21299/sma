@@ -1,6 +1,8 @@
 /**
  * Timetable Service - OOP approach for data access using Supabase
  */
+import { retrySupabaseQuery } from "@/lib/retry";
+
 export class TimetableService {
   constructor(supabaseClient) {
     this.supabase = supabaseClient;
@@ -104,55 +106,95 @@ export class TimetableService {
       let userData = null;
       let userError = null;
 
-      // Try email field first
-      const { data: emailData, error: emailError } = await this.supabase
-        .from("users")
-        .select("id")
-        .eq("email", trimmedUsername)
-        .maybeSingle();
+      // Try email field first with retry
+      try {
+        const { data: emailData, error: emailError } = await retrySupabaseQuery(() =>
+          this.supabase
+            .from("users")
+            .select("id")
+            .eq("email", trimmedUsername)
+            .maybeSingle()
+        );
 
-      if (!emailError && emailData) {
-        userData = emailData;
-      } else {
-        // Try user_id field as fallback
-        const { data: userIdData, error: userIdError } = await this.supabase
-          .from("users")
-          .select("id")
-          .eq("user_id", trimmedUsername)
-          .maybeSingle();
-
-        if (!userIdError && userIdData) {
-          userData = userIdData;
+        if (!emailError && emailData) {
+          userData = emailData;
         } else {
-          userError = emailError || userIdError;
+          userError = emailError;
+        }
+      } catch (networkError) {
+        console.error("Network error fetching user by email:", networkError);
+        userError = networkError;
+      }
+
+      // Try user_id field as fallback with retry
+      if (!userData) {
+        try {
+          const { data: userIdData, error: userIdError } = await retrySupabaseQuery(() =>
+            this.supabase
+              .from("users")
+              .select("id")
+              .eq("user_id", trimmedUsername)
+              .maybeSingle()
+          );
+
+          if (!userIdError && userIdData) {
+            userData = userIdData;
+          } else if (!userError) {
+            userError = userIdError;
+          }
+        } catch (networkError) {
+          console.error("Network error fetching user by user_id:", networkError);
+          if (!userError) {
+            userError = networkError;
+          }
         }
       }
 
       if (userError || !userData) {
+        // Check if it's a network error
+        const errorMessage = userError?.message || String(userError || "");
+        if (errorMessage.includes("fetch failed") || errorMessage.includes("Network error")) {
+          throw new Error("Network error: Unable to connect to database. Please try again.");
+        }
         console.error("Error fetching user:", userError);
         return null;
       }
 
-      // Then get staff_id from staff table
-      const { data: staffData, error: staffError } = await this.supabase
-        .from("staff")
-        .select("id")
-        .eq("user_id", userData.id)
-        .maybeSingle();
+      // Then get staff_id from staff table with retry
+      try {
+        const { data: staffData, error: staffError } = await retrySupabaseQuery(() =>
+          this.supabase
+            .from("staff")
+            .select("id")
+            .eq("user_id", userData.id)
+            .maybeSingle()
+        );
 
-      if (staffError) {
-        console.error("Error fetching staff:", staffError);
-        return null;
+        if (staffError) {
+          const errorMessage = staffError.message || String(staffError);
+          if (errorMessage.includes("fetch failed") || errorMessage.includes("Network error")) {
+            throw new Error("Network error: Unable to connect to database. Please try again.");
+          }
+          console.error("Error fetching staff:", staffError);
+          return null;
+        }
+
+        if (!staffData) {
+          console.error("Staff record not found for user:", userData.id);
+          return null;
+        }
+
+        return staffData.id;
+      } catch (networkError) {
+        console.error("Network error fetching staff:", networkError);
+        throw networkError;
       }
-
-      if (!staffData) {
-        console.error("Staff record not found for user:", userData.id);
-        return null;
-      }
-
-      return staffData.id;
     } catch (exception) {
       console.error("Exception in getStaffIdByUsername:", exception);
+      // Re-throw network errors so API routes can handle them
+      if (exception.message && exception.message.includes("Network error")) {
+        throw exception;
+      }
       return null;
     }
   }

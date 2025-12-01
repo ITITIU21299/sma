@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { StaffService } from "@/services/StaffService";
+import { handleApiError } from "@/lib/api-helpers";
 
 export async function GET(request) {
   try {
@@ -19,25 +20,31 @@ export async function GET(request) {
     const supabase = await createSupabaseScriptClient();
     const staffService = new StaffService(supabase);
 
-    // Get staff_id from username
-    const staffId = await staffService.getStaffIdByUsername(user.username);
+    // Get staff_id from username with error handling
+    let staffId;
+    try {
+      staffId = await staffService.getStaffIdByUsername(user.username);
+    } catch (networkError) {
+      console.error("Network error fetching staff ID:", networkError);
+      return handleApiError(networkError, "staff profile");
+    }
+
     if (!staffId) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
     }
 
     // Get staff profile
-    const staffProfile = await staffService.getStaffProfile(staffId);
-
-    return NextResponse.json({
-      success: true,
-      staff: staffProfile,
-    });
+    try {
+      const staffProfile = await staffService.getStaffProfile(staffId);
+      return NextResponse.json({
+        success: true,
+        staff: staffProfile,
+      });
+    } catch (error) {
+      return handleApiError(error, "staff profile");
+    }
   } catch (error) {
-    console.error("Error fetching staff profile:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return handleApiError(error, "staff profile");
   }
 }
 

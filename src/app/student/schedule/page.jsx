@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Printer } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Printer,
+} from "lucide-react";
 
 export default function StudentSchedulePage() {
   const [timetableData, setTimetableData] = useState([]);
@@ -10,22 +17,29 @@ export default function StudentSchedulePage() {
   const [selectedSemester, setSelectedSemester] = useState("1");
   const [selectedYear, setSelectedYear] = useState("2025");
   const [currentWeek, setCurrentWeek] = useState(13);
-  const [semesterStartDate, setSemesterStartDate] = useState(new Date("2025-09-01"));
+  const [semesterStartDate, setSemesterStartDate] = useState(
+    new Date("2025-09-01")
+  );
+  const [availableSemesters, setAvailableSemesters] = useState([]);
 
   // Generate time units: Unit 1 starts at 8:00 AM, each unit is 50 minutes
   const generateTimeUnits = () => {
     const units = [];
     let hour = 8;
     let minute = 0;
-    
+
     for (let i = 1; i <= 16; i++) {
-      const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const startTime = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
       minute += 50;
       if (minute >= 60) {
         hour += 1;
         minute -= 60;
       }
-      const endTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      const endTime = `${hour.toString().padStart(2, "0")}:${minute
+        .toString()
+        .padStart(2, "0")}`;
       units.push({ unit: i, startTime, endTime });
     }
     return units;
@@ -39,18 +53,20 @@ export default function StudentSchedulePage() {
     startDate.setDate(startDate.getDate() + (week - 1) * 7);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
-    
+
     const formatDate = (date) => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     };
-    
+
     return {
       start: startDate,
       end: endDate,
-      formatted: `Week ${week} [From ${formatDate(startDate)} -- To ${formatDate(endDate)}]`
+      formatted: `Week ${week} [From ${formatDate(
+        startDate
+      )} -- To ${formatDate(endDate)}]`,
     };
   };
 
@@ -58,13 +74,21 @@ export default function StudentSchedulePage() {
 
   // Get day name from day_of_week (1=Monday, 7=Sunday)
   const getDayName = (dayOfWeek) => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
     return days[dayOfWeek - 1];
   };
 
   // Convert time string (HH:MM) to minutes since midnight
   const timeToMinutes = (timeStr) => {
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    const [hours, minutes] = timeStr.split(":").map(Number);
     return hours * 60 + minutes;
   };
 
@@ -86,88 +110,62 @@ export default function StudentSchedulePage() {
     return Math.max(1, endUnit - startUnit + 1);
   };
 
+  // Fetch available semesters
+  useEffect(() => {
+    const fetchSemesters = async () => {
+      try {
+        const response = await fetch("/api/student/semesters");
+        const data = await response.json();
+
+        if (data.success && data.semesters.length > 0) {
+          setAvailableSemesters(data.semesters);
+          // Set default to first available semester
+          const firstSem = data.semesters[0];
+          setSelectedSemester(firstSem.semester);
+          setSelectedYear(firstSem.year.toString());
+        } else {
+          // Default fallback
+          const currentYear = new Date().getFullYear();
+          setAvailableSemesters([
+            { semester: "1", year: currentYear },
+            { semester: "2", year: currentYear },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching semesters:", error);
+        // Default fallback
+        const currentYear = new Date().getFullYear();
+        setAvailableSemesters([
+          { semester: "1", year: currentYear },
+          { semester: "2", year: currentYear },
+        ]);
+      }
+    };
+
+    fetchSemesters();
+  }, []);
+
+  // Fetch timetable data
   useEffect(() => {
     const fetchTimetable = async () => {
+      if (!selectedSemester || !selectedYear) return;
+
       try {
         setLoading(true);
-        // TODO: Replace with actual API call
-        // const response = await fetch(`/api/student/timetable?semester=${selectedSemester}&year=${selectedYear}&week=${currentWeek}`);
-        // const data = await response.json();
-        
-        // Mock data based on database schema
-        // timetable: { day_of_week, start_time, end_time, class_id, room_id, staff_id }
-        // classes: { subject_id, class_name, semester, year }
-        // subjects: { name, code }
-        // rooms: { room_name }
-        const mockData = [
-          {
-            day_of_week: 2, // Tuesday
-            start_time: "08:50",
-            end_time: "09:40",
-            subject_name: "Data Mining",
-            room_name: "A1.202"
-          },
-          {
-            day_of_week: 3, // Wednesday
-            start_time: "08:50",
-            end_time: "09:40",
-            subject_name: "Scalable and Distributed Computing",
-            room_name: "ONLINE"
-          },
-          {
-            day_of_week: 4, // Thursday
-            start_time: "08:50",
-            end_time: "09:40",
-            subject_name: "Net-Centric Programming",
-            room_name: "A2.301"
-          },
-          {
-            day_of_week: 6, // Saturday
-            start_time: "08:50",
-            end_time: "09:40",
-            subject_name: "Scalable and Distributed Computing",
-            room_name: "A1.309"
-          },
-          {
-            day_of_week: 1, // Monday
-            start_time: "12:00",
-            end_time: "12:50",
-            subject_name: "Data Mining",
-            room_name: "ONLINE"
-          },
-          {
-            day_of_week: 2, // Tuesday
-            start_time: "12:00",
-            end_time: "12:50",
-            subject_name: "Net-Centric Programming",
-            room_name: "LA1.302"
-          },
-          {
-            day_of_week: 4, // Thursday
-            start_time: "12:00",
-            end_time: "12:50",
-            subject_name: "IT Project Management",
-            room_name: "A2.307"
-          },
-          {
-            day_of_week: 5, // Friday
-            start_time: "13:40",
-            end_time: "14:30",
-            subject_name: "Chemistry Laboratory",
-            room_name: "LA1.502"
-          },
-          {
-            day_of_week: 6, // Saturday
-            start_time: "12:00",
-            end_time: "12:50",
-            subject_name: "IT Project Management",
-            room_name: "ONLINE3"
-          }
-        ];
-        
-        setTimetableData(mockData);
+        const response = await fetch(
+          `/api/student/timetable?semester=${selectedSemester}&year=${selectedYear}&week=${currentWeek}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setTimetableData(data.data || []);
+        } else {
+          console.error("Error fetching timetable:", data.error);
+          setTimetableData([]);
+        }
       } catch (error) {
         console.error("Error fetching timetable:", error);
+        setTimetableData([]);
       } finally {
         setLoading(false);
       }
@@ -180,7 +178,7 @@ export default function StudentSchedulePage() {
   const organizeTimetable = () => {
     const organized = {};
     const spannedCells = new Set(); // Track cells that are part of a rowspan
-    
+
     for (let day = 1; day <= 7; day++) {
       organized[day] = {};
       for (let unit = 1; unit <= 16; unit++) {
@@ -188,14 +186,14 @@ export default function StudentSchedulePage() {
       }
     }
 
-    timetableData.forEach(item => {
+    timetableData.forEach((item) => {
       const unit = getUnitFromTime(item.start_time);
       if (unit) {
         const unitsSpan = getUnitsSpan(item.start_time, item.end_time);
         if (!organized[item.day_of_week][unit]) {
           organized[item.day_of_week][unit] = {
             ...item,
-            unitsSpan
+            unitsSpan,
           };
           // Mark subsequent units as spanned
           for (let i = 1; i < unitsSpan; i++) {
@@ -234,7 +232,11 @@ export default function StudentSchedulePage() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -244,18 +246,38 @@ export default function StudentSchedulePage() {
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            <label className="text-sm font-medium">Select semester to view timetable</label>
+            <label className="text-sm font-medium">
+              Select semester to view timetable
+            </label>
             <select
               value={`${selectedSemester}-${selectedYear}`}
               onChange={(e) => {
-                const [sem, year] = e.target.value.split('-');
+                const [sem, year] = e.target.value.split("-");
                 setSelectedSemester(sem);
                 setSelectedYear(year);
               }}
               className="px-3 py-2 border rounded-md bg-background"
             >
-              <option value="1-2025">Semester 1, Academic year 2025-20</option>
-              <option value="2-2025">Semester 2, Academic year 2025-20</option>
+              {availableSemesters.length > 0 ? (
+                availableSemesters.map((sem) => (
+                  <option
+                    key={`${sem.semester}-${sem.year}`}
+                    value={`${sem.semester}-${sem.year}`}
+                  >
+                    Semester {sem.semester}, Academic year {sem.year}-
+                    {String(sem.year + 1).slice(-2)}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="1-2025">
+                    Semester 1, Academic year 2025-20
+                  </option>
+                  <option value="2-2025">
+                    Semester 2, Academic year 2025-20
+                  </option>
+                </>
+              )}
             </select>
           </div>
         </div>
@@ -275,11 +297,6 @@ export default function StudentSchedulePage() {
             Print out timetable
           </Button>
         </div>
-
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>(Note: week 1 corresponds to the first week of the semester, beginning on 01/09/2025)</p>
-          <p>(Data has been uploaded in: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} Date {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })})</p>
-        </div>
       </div>
 
       {/* Timetable Grid */}
@@ -290,8 +307,11 @@ export default function StudentSchedulePage() {
               <th className="bg-primary text-primary-foreground p-2 text-center font-semibold text-sm border">
                 Time
               </th>
-              {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                <th key={day} className="bg-primary text-primary-foreground p-2 text-center font-semibold text-sm border">
+              {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                <th
+                  key={day}
+                  className="bg-primary text-primary-foreground p-2 text-center font-semibold text-sm border"
+                >
                   {getDayName(day)}
                 </th>
               ))}
@@ -300,26 +320,31 @@ export default function StudentSchedulePage() {
           <tbody>
             {timeUnits.map(({ unit, startTime, endTime }) => {
               const rowCells = [];
-              
+
               // Left Time Label
               rowCells.push(
-                <td key={`left-${unit}`} className="bg-muted p-2 text-center text-xs font-medium border">
+                <td
+                  key={`left-${unit}`}
+                  className="bg-muted p-2 text-center text-xs font-medium border"
+                >
                   Unit {unit}
                 </td>
               );
-              
+
               // Day Columns
               for (let day = 1; day <= 7; day++) {
                 const cellKey = `${day}-${unit}`;
-                
+
                 // Skip if this cell is part of a rowspan from a previous unit
                 if (spannedCells.has(cellKey)) {
                   continue;
                 }
-                
+
                 const schedule = organizedData[day][unit];
-                const startUnit = schedule ? getUnitFromTime(schedule.start_time) : null;
-                
+                const startUnit = schedule
+                  ? getUnitFromTime(schedule.start_time)
+                  : null;
+
                 if (schedule && startUnit === unit) {
                   const rowSpan = schedule.unitsSpan || 1;
                   rowCells.push(
@@ -328,18 +353,24 @@ export default function StudentSchedulePage() {
                       rowSpan={rowSpan}
                       className="bg-[#808000] text-white p-2 text-xs border align-top"
                     >
-                      <div className="font-semibold">{schedule.subject_name}</div>
-                      <div className="text-[10px] mt-1">Room: {schedule.room_name}</div>
+                      <div className="font-semibold">
+                        {schedule.subject_name}
+                      </div>
+                      <div className="text-[10px] mt-1">
+                        Room: {schedule.room_name}
+                      </div>
                     </td>
                   );
                 } else {
                   rowCells.push(
-                    <td key={cellKey} className="bg-background p-2 border min-h-[60px]">
-                    </td>
+                    <td
+                      key={cellKey}
+                      className="bg-background p-2 border min-h-[60px]"
+                    ></td>
                   );
                 }
               }
-              
+
               return <tr key={unit}>{rowCells}</tr>;
             })}
           </tbody>
@@ -348,8 +379,11 @@ export default function StudentSchedulePage() {
               <td className="bg-muted p-2 text-center text-xs font-medium border">
                 Time
               </td>
-              {[1, 2, 3, 4, 5, 6, 7].map(day => (
-                <td key={`right-${day}`} className="bg-muted p-2 text-center text-xs font-medium border">
+              {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                <td
+                  key={`right-${day}`}
+                  className="bg-muted p-2 text-center text-xs font-medium border"
+                >
                   {getDayName(day)}
                 </td>
               ))}
@@ -360,10 +394,6 @@ export default function StudentSchedulePage() {
 
       {/* Footer Section */}
       <div className="flex items-center justify-between pt-4">
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-4 h-4 bg-[#808000] border"></div>
-          <span>Subject has some coincided slots</span>
-        </div>
         <div className="flex gap-2">
           <Button onClick={handleFirstWeek} variant="outline" size="sm">
             <ChevronsLeft className="w-4 h-4 mr-1" />

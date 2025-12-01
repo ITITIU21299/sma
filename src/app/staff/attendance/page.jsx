@@ -3,18 +3,16 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Clock, Calendar } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { CheckCircle, XCircle, Clock } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 export default function StaffAttendancePage() {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [semesterStartDate, setSemesterStartDate] = useState("2025-09-01");
   const [loading, setLoading] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,9 +39,9 @@ export default function StaffAttendancePage() {
     fetchClasses();
   }, []);
 
-  // Fetch students when class is selected
+  // Fetch students when class and section are selected
   useEffect(() => {
-    if (!selectedClass) {
+    if (!selectedClass || !selectedSection) {
       setStudents([]);
       setAttendance({});
       return;
@@ -53,16 +51,20 @@ export default function StaffAttendancePage() {
       setLoadingStudents(true);
       try {
         const response = await fetch(
-          `/api/staff/attendance?classId=${selectedClass.id}`
+          `/api/staff/attendance?classId=${selectedClass.id}&section=${selectedSection}&semesterStartDate=${semesterStartDate}`
         );
         const data = await response.json();
 
         if (data.success && data.students) {
           setStudents(data.students);
-          // Initialize attendance status as 'present' for all students
+          // Initialize attendance status from existing records or default to 'present'
           const initialAttendance = {};
           data.students.forEach((student) => {
-            initialAttendance[student.student_id] = "present";
+            // If student already has attendance record, use that status
+            const existingRecord = data.attendance?.find(
+              (a) => a.student_id === student.student_id
+            );
+            initialAttendance[student.student_id] = existingRecord?.status || "present";
           });
           setAttendance(initialAttendance);
         } else {
@@ -76,39 +78,7 @@ export default function StaffAttendancePage() {
     };
 
     fetchStudents();
-  }, [selectedClass]);
-
-  // Fetch existing attendance when date or class changes
-  useEffect(() => {
-    if (!selectedClass || !selectedDate) return;
-
-    const fetchAttendance = async () => {
-      try {
-        const response = await fetch(
-          `/api/staff/attendance?classId=${selectedClass.id}&date=${selectedDate}`
-        );
-        const data = await response.json();
-
-        if (data.success && data.attendance) {
-          const attendanceMap = {};
-          data.attendance.forEach((record) => {
-            attendanceMap[record.student_id] = record.status;
-          });
-          // Merge with existing attendance (for students not yet marked)
-          students.forEach((student) => {
-            if (!attendanceMap[student.student_id]) {
-              attendanceMap[student.student_id] = "present";
-            }
-          });
-          setAttendance(attendanceMap);
-        }
-      } catch (error) {
-        console.error("Error fetching attendance:", error);
-      }
-    };
-
-    fetchAttendance();
-  }, [selectedClass, selectedDate, students]);
+  }, [selectedClass, selectedSection, semesterStartDate]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -131,13 +101,21 @@ export default function StaffAttendancePage() {
   };
 
   const handleSaveAttendance = async () => {
-    if (!selectedClass || !selectedDate) {
-      alert("Please select a class and date");
+    if (!selectedClass || !selectedSection) {
+      alert("Please select a class and section");
       return;
     }
 
     setSaving(true);
     try {
+      // Calculate the date for this section (first day of the section)
+      const startDate = new Date(semesterStartDate);
+      const sectionStartDate = new Date(startDate);
+      sectionStartDate.setDate(startDate.getDate() + (selectedSection - 1) * 7);
+      
+      // Use the first day of the section as the date
+      const dateStr = sectionStartDate.toISOString().split("T")[0];
+
       const bulkAttendance = Object.entries(attendance).map(
         ([student_id, status]) => ({
           student_id,
@@ -148,9 +126,11 @@ export default function StaffAttendancePage() {
       const response = await fetch("/api/staff/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+          body: JSON.stringify({
           classId: selectedClass.id,
-          date: selectedDate,
+          date: dateStr,
+          section: selectedSection,
+          semesterStartDate: semesterStartDate,
           bulkAttendance,
         }),
       });
@@ -194,6 +174,7 @@ export default function StaffAttendancePage() {
                   const classId = e.target.value;
                   const cls = classes.find((c) => c.id === classId);
                   setSelectedClass(cls || null);
+                  setSelectedSection(null); // Reset section when class changes
                 }}
                 className="w-full px-3 py-2 border rounded-md bg-background"
               >
@@ -205,29 +186,41 @@ export default function StaffAttendancePage() {
                 ))}
               </select>
             </div>
-
-            {selectedClass && (
-              <div className="space-y-2">
-                <Label htmlFor="dateSelect">Date</Label>
-                <Input
-                  id="dateSelect"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Students and Attendance */}
+      {/* Section Selection */}
       {selectedClass && (
         <Card>
           <CardHeader>
+            <CardTitle>Select Section (Week)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((section) => (
+                <Button
+                  key={section}
+                  variant={selectedSection === section ? "default" : "outline"}
+                  onClick={() => setSelectedSection(section)}
+                  className="w-full"
+                >
+                  Section {section}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Students and Attendance */}
+      {selectedClass && selectedSection && (
+        <Card>
+          <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>Attendance for {selectedClass.class_name}</span>
+              <span>
+                Attendance for {selectedClass.class_name} - Section {selectedSection}
+              </span>
               <Button
                 onClick={handleSaveAttendance}
                 disabled={saving || loadingStudents}
@@ -256,7 +249,7 @@ export default function StaffAttendancePage() {
                             <div>
                               <p className="font-semibold">{student.full_name}</p>
                               <p className="text-sm text-muted-foreground">
-                                Student ID: {student.student_id.slice(0, 8)}...
+                                Student ID: {student.student_id_text || student.student_id?.slice(0, 8) || "N/A"}
                               </p>
                             </div>
                           </div>
@@ -315,6 +308,16 @@ export default function StaffAttendancePage() {
                 })}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedClass && !selectedSection && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8 text-muted-foreground">
+              Please select a section (week) to manage attendance
+            </div>
           </CardContent>
         </Card>
       )}

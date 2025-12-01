@@ -19,14 +19,29 @@ export async function GET(request) {
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const classId = searchParams.get("classId");
-    const date = searchParams.get("date");
+    const section = searchParams.get("section");
+    const semesterStartDate = searchParams.get("semesterStartDate") || "2025-09-01";
+    const date = searchParams.get("date"); // Keep for backward compatibility
 
     // Create Supabase client
     const supabase = await createSupabaseScriptClient();
     const attendanceService = new AttendanceService(supabase);
 
-    if (classId && date) {
-      // Get attendance for a specific class and date
+    if (classId && section) {
+      // Get students and attendance for a specific class and section
+      const students = await attendanceService.getClassStudents(classId);
+      const attendance = await attendanceService.getClassAttendanceBySection(
+        classId,
+        parseInt(section),
+        semesterStartDate
+      );
+      return NextResponse.json({
+        success: true,
+        students,
+        attendance,
+      });
+    } else if (classId && date) {
+      // Get attendance for a specific class and date (backward compatibility)
       const attendance = await attendanceService.getClassAttendance(
         classId,
         date
@@ -71,7 +86,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { classId, studentId, date, status, bulkAttendance } = body;
+    const { classId, studentId, date, status, bulkAttendance, section, semesterStartDate } = body;
 
     // Create Supabase client
     const supabase = await createSupabaseScriptClient();
@@ -90,7 +105,9 @@ export async function POST(request) {
         classId,
         bulkAttendance,
         date,
-        staffId
+        staffId,
+        section || null,
+        semesterStartDate || null
       );
       return NextResponse.json({
         success: true,

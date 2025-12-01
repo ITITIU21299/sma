@@ -16,17 +16,21 @@ export default function StudentFeedbackPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // TODO: Replace with actual API call
-      // await fetch("/api/student/feedback", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ subject, message }),
-      // });
-      
-      setSubmitted(true);
-      setSubject("");
-      setMessage("");
-      setTimeout(() => setSubmitted(false), 3000);
+      const response = await fetch("/api/student/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, message }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setSubmitted(true);
+        setSubject("");
+        setMessage("");
+        setTimeout(() => setSubmitted(false), 3000);
+      } else {
+        console.error("Error submitting feedback:", data.error);
+      }
     } catch (error) {
       console.error("Error submitting feedback:", error);
     }

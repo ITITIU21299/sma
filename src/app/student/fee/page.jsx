@@ -11,18 +11,34 @@ export default function StudentFeePage() {
   useEffect(() => {
     const fetchFees = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/student/fee");
-        // const data = await response.json();
-        
-        // Placeholder data
-        const mockFees = [
-          new Fee(1, 2024, "500000", "2024-08-15", "paid"),
-          new Fee(2, 2024, "500000", "2024-12-15", "pending"),
-        ];
-        setFees(mockFees);
+        const response = await fetch("/api/student/fee");
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          // Transform API data to Fee model format
+          const feeRecords = data.data.map((fee) => {
+            // Extract semester and year from due_date or use defaults
+            const dueDate = new Date(fee.due_date);
+            const semester = dueDate.getMonth() < 6 ? 1 : 2; // Rough estimate
+            const year = dueDate.getFullYear();
+            const status = fee.paid ? "paid" : "pending";
+            
+            return new Fee(
+              semester,
+              year,
+              fee.amount.toString(),
+              fee.due_date,
+              status
+            );
+          });
+          setFees(feeRecords);
+        } else {
+          console.error("Error fetching fees:", data.error);
+          setFees([]);
+        }
       } catch (error) {
         console.error("Error fetching fees:", error);
+        setFees([]);
       } finally {
         setLoading(false);
       }

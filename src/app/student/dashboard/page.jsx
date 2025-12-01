@@ -14,14 +14,16 @@ export default function StudentDashboard() {
     // Fetch student data
     const fetchData = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/student/dashboard");
-        // const data = await response.json();
-        
-        // Placeholder data
-        setStudent({ name: "Student Name" });
-        setGpa(3.5);
-        setAttendanceRate(85);
+        const response = await fetch("/api/student/dashboard");
+        const data = await response.json();
+
+        if (data.success) {
+          setStudent({ name: data.name || "Student" });
+          setGpa(parseFloat(data.gpa) || 0);
+          setAttendanceRate(parseFloat(data.attendanceRate) || 0);
+        } else {
+          console.error("Error fetching dashboard data:", data.error);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {

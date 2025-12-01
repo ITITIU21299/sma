@@ -2,36 +2,70 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Attendance } from "@/models/Attendance";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export default function StudentAttendancePage() {
-  const [attendance, setAttendance] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [attendanceByWeek, setAttendanceByWeek] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [semesterStartDate, setSemesterStartDate] = useState("2025-09-01");
 
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const fetchClasses = async () => {
       try {
-        // TODO: Replace with actual API call
-        // const response = await fetch("/api/student/attendance");
-        // const data = await response.json();
-        
-        // Placeholder data
-        const mockAttendance = [
-          new Attendance("A001", "S001", "Section A", "present"),
-          new Attendance("A002", "S001", "Section A", "absent"),
-          new Attendance("A003", "S001", "Section A", "late"),
-        ];
-        setAttendance(mockAttendance);
+        const response = await fetch("/api/student/attendance");
+        const data = await response.json();
+
+        if (data.success && data.classes) {
+          setClasses(data.classes);
+        } else {
+          console.error("Error fetching classes:", data.error);
+          setClasses([]);
+        }
       } catch (error) {
-        console.error("Error fetching attendance:", error);
+        console.error("Error fetching classes:", error);
+        setClasses([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAttendance();
+    fetchClasses();
   }, []);
+
+  useEffect(() => {
+    if (!selectedClassId) {
+      setAttendanceByWeek({});
+      return;
+    }
+
+    const fetchAttendance = async () => {
+      try {
+        setLoadingAttendance(true);
+        const response = await fetch(
+          `/api/student/attendance?classId=${selectedClassId}`
+        );
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          setAttendanceByWeek(data.data);
+        } else {
+          console.error("Error fetching attendance:", data.error);
+          setAttendanceByWeek({});
+        }
+      } catch (error) {
+        console.error("Error fetching attendance:", error);
+        setAttendanceByWeek({});
+      } finally {
+        setLoadingAttendance(false);
+      }
+    };
+
+    fetchAttendance();
+  }, [selectedClassId]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -63,36 +97,77 @@ export default function StudentAttendancePage() {
     return <div>Loading...</div>;
   }
 
+  const selectedClass = classes.find((c) => c.class_id === selectedClassId);
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Attendance</h1>
 
-      <div className="grid grid-cols-1 gap-4">
-        {attendance.map((record, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  {getStatusIcon(record.getStatus())}
-                  <div>
-                    <p className="font-semibold">Section: {record.getSectionId()}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Assignment ID: {record.getAssignmentId()}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(
-                    record.getStatus()
-                  )}`}
-                >
-                  {record.getStatus()}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Select Class</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="class-select">Class</Label>
+            <select
+              id="class-select"
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md bg-background"
+            >
+              <option value="">-- Select a class --</option>
+              {classes.map((cls) => (
+                <option key={cls.class_id} value={cls.class_id}>
+                  {cls.class_name} - {cls.subject_name} ({cls.semester}/{cls.year})
+                </option>
+              ))}
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedClassId && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">
+            Attendance for {selectedClass?.class_name} - {selectedClass?.subject_name}
+          </h2>
+
+          {loadingAttendance ? (
+            <div>Loading attendance...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((section) => {
+                const sectionData = attendanceByWeek[section] || { status: null, records: [] };
+                const status = sectionData.status;
+                return (
+                  <Card key={section} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Section {section}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {status === null ? (
+                        <p className="text-sm text-muted-foreground">No attendance recorded</p>
+                      ) : (
+                        <div className="flex flex-col items-center space-y-2">
+                          {getStatusIcon(status)}
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -194,20 +194,32 @@ export class UserService {
   async createUser(username, password, role) {
     const hashedPassword = await PasswordUtil.hashPassword(password);
 
+    // Determine if username is email or user_id
+    const isEmail = username.includes("@");
+    const insertData = {
+      password_hash: hashedPassword,
+      role,
+    };
+
+    if (isEmail) {
+      insertData.email = username;
+    } else {
+      insertData.user_id = username;
+    }
+
     const { data, error } = await this.supabase
       .from("users")
-      .insert({
-        username,
-        password: hashedPassword,
-        role,
-      })
+      .insert(insertData)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
+      console.error("Error creating user:", error);
       return null;
     }
 
-    return new User(data.username, data.password, data.role);
+    // Use email or user_id as identifier
+    const identifier = data.email || data.user_id || username;
+    return new User(identifier, data.password_hash, data.role);
   }
 }

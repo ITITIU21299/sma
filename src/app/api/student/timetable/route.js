@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
-import { TimetableService } from "@/services/TimetableService";
+import { StudentService } from "@/services/StudentService";
 import { handleApiError } from "@/lib/api-helpers";
 
 export async function GET(request) {
@@ -15,7 +15,7 @@ export async function GET(request) {
     }
 
     const user = JSON.parse(userCookie.value);
-    if (user.role !== "staff") {
+    if (user.role !== "student") {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }
@@ -30,28 +30,28 @@ export async function GET(request) {
 
     // Create Supabase client
     const supabase = await createSupabaseScriptClient();
-    const timetableService = new TimetableService(supabase);
+    const studentService = new StudentService(supabase);
 
-    // Get staff_id from username with error handling
-    let staffId;
+    // Get student_id from username with error handling
+    let studentId;
     try {
-      staffId = await timetableService.getStaffIdByUsername(user.username);
+      studentId = await studentService.getStudentIdByUsername(user.username);
     } catch (networkError) {
-      console.error("Network error fetching staff ID:", networkError);
-      return handleApiError(networkError, "staff timetable");
+      console.error("Network error fetching student ID:", networkError);
+      return handleApiError(networkError, "student timetable");
     }
 
-    if (!staffId) {
+    if (!studentId) {
       return NextResponse.json(
-        { error: "Staff not found" },
+        { error: "Student not found" },
         { status: 404 }
       );
     }
 
     // Get timetable data
     try {
-      const timetableData = await timetableService.getStaffTimetable(
-        staffId,
+      const timetableData = await studentService.getStudentTimetable(
+        studentId,
         semester,
         parseInt(year)
       );
@@ -64,10 +64,10 @@ export async function GET(request) {
         week: parseInt(week),
       });
     } catch (error) {
-      return handleApiError(error, "staff timetable");
+      return handleApiError(error, "student timetable");
     }
   } catch (error) {
-    return handleApiError(error, "staff timetable");
+    return handleApiError(error, "student timetable");
   }
 }
 
