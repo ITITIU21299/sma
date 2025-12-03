@@ -16,11 +16,33 @@ export default function StudentSchedulePage() {
   const [loading, setLoading] = useState(true);
   const [selectedSemester, setSelectedSemester] = useState("1");
   const [selectedYear, setSelectedYear] = useState("2025");
-  const [currentWeek, setCurrentWeek] = useState(13);
   const [semesterStartDate, setSemesterStartDate] = useState(
     new Date("2025-09-01")
   );
   const [availableSemesters, setAvailableSemesters] = useState([]);
+
+  // Calculate current week based on today's date and semester start date
+  const calculateCurrentWeek = (startDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    if (today < start) {
+      return 1; // If today is before semester start, show week 1
+    }
+    
+    const diffTime = today - start;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const week = Math.floor(diffDays / 7) + 1;
+    
+    // Cap at week 16 (typical semester length)
+    return Math.min(Math.max(week, 1), 16);
+  };
+
+  const [currentWeek, setCurrentWeek] = useState(() => 
+    calculateCurrentWeek(new Date("2025-09-01"))
+  );
 
   // Generate time units: Unit 1 starts at 8:00 AM, each unit is 50 minutes
   const generateTimeUnits = () => {
@@ -123,6 +145,12 @@ export default function StudentSchedulePage() {
           const firstSem = data.semesters[0];
           setSelectedSemester(firstSem.semester);
           setSelectedYear(firstSem.year.toString());
+          // Update semester start date and recalculate current week
+          if (firstSem.start_date) {
+            const startDate = new Date(firstSem.start_date);
+            setSemesterStartDate(startDate);
+            setCurrentWeek(calculateCurrentWeek(startDate));
+          }
         } else {
           // Default fallback
           const currentYear = new Date().getFullYear();
@@ -144,6 +172,11 @@ export default function StudentSchedulePage() {
 
     fetchSemesters();
   }, []);
+
+  // Recalculate current week when semester changes
+  useEffect(() => {
+    setCurrentWeek(calculateCurrentWeek(semesterStartDate));
+  }, [selectedSemester, selectedYear, semesterStartDate]);
 
   // Fetch timetable data
   useEffect(() => {

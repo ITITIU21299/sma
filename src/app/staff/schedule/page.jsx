@@ -20,9 +20,65 @@ export default function StaffSchedulePage() {
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString()
   )
-  const [currentWeek, setCurrentWeek] = useState(1)
   const [semesterStartDate, setSemesterStartDate] = useState(
     new Date('2025-09-01')
+  )
+
+  // Calculate current week based on today's date and semester start date
+  const calculateCurrentWeek = (startDate, semester) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const start = new Date(startDate)
+    start.setHours(0, 0, 0, 0)
+    
+    if (today < start) {
+      // If today is before semester start, return first week of that semester
+      switch (semester) {
+        case 'Fall':
+          return 1
+        case 'Spring':
+          return 20
+        case 'Summer':
+          return 41
+        default:
+          return 1
+      }
+    }
+    
+    const diffTime = today - start
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    const week = Math.floor(diffDays / 7) + 1
+    
+    // Determine semester boundaries
+    let minWeek, maxWeek
+    switch (semester) {
+      case 'Fall':
+        minWeek = 1
+        maxWeek = 19
+        break
+      case 'Spring':
+        minWeek = 20
+        maxWeek = 40
+        break
+      case 'Summer':
+        minWeek = 41
+        maxWeek = 52
+        break
+      default:
+        minWeek = 1
+        maxWeek = 19
+    }
+    
+    // If calculated week is outside semester range, return first week of semester
+    if (week < minWeek || week > maxWeek) {
+      return minWeek
+    }
+    
+    return week
+  }
+
+  const [currentWeek, setCurrentWeek] = useState(() => 
+    calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
   )
 
   // Generate time units: Unit 1 starts at 8:00 AM, each unit is 50 minutes
@@ -221,6 +277,14 @@ export default function StaffSchedulePage() {
         const firstSem = data.semesters[0]
         setSelectedSemester(firstSem.semester)
         setSelectedYear(firstSem.year.toString())
+        // Update semester start date and recalculate current week
+        if (firstSem.start_date) {
+          const startDate = new Date(firstSem.start_date)
+          setSemesterStartDate(startDate)
+          setCurrentWeek(calculateCurrentWeek(startDate, firstSem.semester))
+        } else {
+          setCurrentWeek(calculateCurrentWeek(new Date('2025-09-01'), firstSem.semester))
+        }
       } else {
         // Default fallback
         const currentYear = new Date().getFullYear()
@@ -267,19 +331,7 @@ export default function StaffSchedulePage() {
   }
 
   const handleSetFirstWeek = () => {
-    switch (selectedSemester) {
-      case 'Fall':
-        setCurrentWeek(1)
-        break
-      case 'Spring':
-        setCurrentWeek(20)
-        break
-      case 'Summer':
-        setCurrentWeek(41)
-        break
-      default:
-        setCurrentWeek(1)
-    }
+    setCurrentWeek(calculateCurrentWeek(semesterStartDate, selectedSemester))
   }
 
   // Fetch available semesters on mount
@@ -288,8 +340,9 @@ export default function StaffSchedulePage() {
   }, [])
 
   useEffect(() => {
-    handleSetFirstWeek()
-  }, [selectedSemester, selectedYear])
+    // Recalculate current week when semester changes
+    setCurrentWeek(calculateCurrentWeek(semesterStartDate, selectedSemester))
+  }, [selectedSemester, selectedYear, semesterStartDate])
 
   // Fetch timetable data
   useEffect(() => {

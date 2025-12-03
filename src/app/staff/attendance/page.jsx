@@ -181,7 +181,7 @@ export default function StaffAttendancePage() {
                 <option value="">-- Select a class --</option>
                 {classes.map((cls) => (
                   <option key={cls.id} value={cls.id}>
-                    {cls.class_name} - {cls.subject_name} ({cls.semester}/{cls.year})
+                    {cls.class_name} ({cls.semester}/{cls.year})
                   </option>
                 ))}
               </select>
@@ -194,7 +194,7 @@ export default function StaffAttendancePage() {
       {selectedClass && (
         <Card>
           <CardHeader>
-            <CardTitle>Select Section (Week)</CardTitle>
+            <CardTitle>Select Week</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2">
@@ -205,7 +205,7 @@ export default function StaffAttendancePage() {
                   onClick={() => setSelectedSection(section)}
                   className="w-full"
                 >
-                  Section {section}
+                  Week {section}
                 </Button>
               ))}
             </div>
@@ -219,7 +219,7 @@ export default function StaffAttendancePage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>
-                Attendance for {selectedClass.class_name} - Section {selectedSection}
+                Attendance for {selectedClass.class_name} - Week {selectedSection}
               </span>
               <Button
                 onClick={handleSaveAttendance}
@@ -316,7 +316,7 @@ export default function StaffAttendancePage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center py-8 text-muted-foreground">
-              Please select a section (week) to manage attendance
+              Please select a week to manage attendance
             </div>
           </CardContent>
         </Card>
