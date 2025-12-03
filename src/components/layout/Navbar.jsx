@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   Home,
   Calendar,
@@ -14,74 +14,79 @@ import {
   User,
   MessageSquare,
   ClipboardList,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Navbar({ userRole, userName }) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const [darkMode, setDarkMode] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("darkMode") === "true";
+    }
+    return false;
+  });
 
   useEffect(() => {
-    // Load dark mode preference
-    const isDark = localStorage.getItem('darkMode') === 'true'
-    setDarkMode(isDark)
-    if (isDark) {
-      document.documentElement.classList.add('dark')
+    // Sync DOM with dark mode state
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
-  }, [])
+  }, [darkMode]);
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-    setDarkMode(newDarkMode)
-    localStorage.setItem('darkMode', newDarkMode.toString())
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem("darkMode", newDarkMode.toString());
     if (newDarkMode) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove("dark");
     }
-  }
+  };
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/login')
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout error:", error);
     }
-  }
+  };
 
-  const isActive = (path) => pathname === path
+  const isActive = (path) => pathname === path;
 
   const studentNavItems = [
-    { href: '/student/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/student/fee', label: 'Fee Information', icon: DollarSign },
+    { href: "/student/dashboard", label: "Dashboard", icon: Home },
+    { href: "/student/fee", label: "Fee Information", icon: DollarSign },
     {
-      href: '/student/exam-schedule',
-      label: 'Exam Schedule',
+      href: "/student/exam-schedule",
+      label: "Exam Schedule",
       icon: CalendarCheck,
     },
-    { href: '/student/schedule', label: 'Room Schedule', icon: Calendar },
-    { href: '/student/attendance', label: 'Attendance', icon: CalendarCheck },
-    { href: '/student/marks', label: 'Marks', icon: ClipboardList },
-    { href: '/student/feedback', label: 'Feedback', icon: MessageSquare },
-  ]
+    { href: "/student/schedule", label: "Room Schedule", icon: Calendar },
+    { href: "/student/attendance", label: "Attendance", icon: CalendarCheck },
+    { href: "/student/marks", label: "Marks", icon: ClipboardList },
+    //{ href: "/student/feedback", label: "Feedback", icon: MessageSquare },
+  ];
 
   const staffNavItems = [
-    { href: '/staff/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/staff/salary', label: 'Salary Information', icon: DollarSign },
-    { href: '/staff/schedule', label: 'Schedule', icon: Calendar },
+    { href: "/staff/dashboard", label: "Dashboard", icon: Home },
+    { href: "/staff/salary", label: "Salary Information", icon: DollarSign },
+    { href: "/staff/schedule", label: "Schedule", icon: Calendar },
     {
-      href: '/staff/attendance',
-      label: 'Manage Attendance',
+      href: "/staff/attendance",
+      label: "Manage Attendance",
       icon: CalendarCheck,
     },
-    { href: '/staff/assign-room', label: 'Assign Room', icon: ClipboardList },
-  ]
+    //{ href: "/staff/assign-room", label: "Assign Room", icon: ClipboardList },
+  ];
 
-  const navItems = userRole === 'student' ? studentNavItems : staffNavItems
+  const navItems = userRole === "student" ? studentNavItems : staffNavItems;
   const profilePath =
-    userRole === 'student' ? '/student/profile' : '/staff/profile'
+    userRole === "student" ? "/student/profile" : "/staff/profile";
 
   return (
     <nav className="bg-primary text-primary-foreground shadow-lg">
@@ -89,7 +94,7 @@ export default function Navbar({ userRole, userName }) {
         <div className="flex items-center justify-between h-16">
           <Link
             href={
-              userRole === 'student' ? '/student/dashboard' : '/staff/dashboard'
+              userRole === "student" ? "/student/dashboard" : "/staff/dashboard"
             }
             className="text-xl font-bold font-montserrat"
           >
@@ -98,21 +103,21 @@ export default function Navbar({ userRole, userName }) {
           <div className="flex items-center space-x-4">
             <div className="hidden lg:flex items-center space-x-2">
               {navItems.map((item) => {
-                const Icon = item.icon
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
                       isActive(item.href)
-                        ? 'bg-primary-foreground/20'
-                        : 'hover:bg-primary-foreground/10'
+                        ? "bg-primary-foreground/20"
+                        : "hover:bg-primary-foreground/10"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="font-montserrat">{item.label}</span>
                   </Link>
-                )
+                );
               })}
             </div>
 
@@ -129,8 +134,8 @@ export default function Navbar({ userRole, userName }) {
                 href={profilePath}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
                   isActive(profilePath)
-                    ? 'bg-primary-foreground/20'
-                    : 'hover:bg-primary-foreground/10'
+                    ? "bg-primary-foreground/20"
+                    : "hover:bg-primary-foreground/10"
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -153,5 +158,5 @@ export default function Navbar({ userRole, userName }) {
         </div>
       </div>
     </nav>
-  )
+  );
 }
