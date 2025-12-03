@@ -140,12 +140,11 @@ export default function Navbar({ userRole, userName }) {
               </Link>
               <Button
                 variant="ghost"
-                size="sm"
                 onClick={handleLogout}
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-primary-foreground hover:bg-primary-foreground/10 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline ml-2 font-montserrat">
+                <span className="hidden md:inline ml-2 font-montserrat text-base font-normal">
                   Logout
                 </span>
               </Button>

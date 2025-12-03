@@ -3,31 +3,31 @@
  */
 export class Salary {
   constructor(amount, month, year, date, status) {
-    this.amount = amount;
-    this.month = month;
-    this.year = year;
-    this.date = date;
-    this.status = status;
+    this.amount = amount
+    this.month = month
+    this.year = year
+    this.date = date
+    this.status = status
   }
 
   getAmount() {
-    return this.amount;
+    return Number(this.amount).toFixed(2)
   }
 
   getMonth() {
-    return this.month;
+    return this.month
   }
 
   getYear() {
-    return this.year;
+    return this.year
   }
 
   getDate() {
-    return this.date;
+    return this.date
   }
 
   getStatus() {
-    return this.status;
+    return this.status
   }
 
   toJSON() {
@@ -37,6 +37,6 @@ export class Salary {
       year: this.year,
       date: this.date,
       status: this.status,
-    };
+    }
   }
 }
