@@ -160,16 +160,51 @@ export class StaffService {
   }
 
   /**
+   * Normalize semester filter to support multiple labels
+   * @param {string|null} semester
+   * @returns {Array<string>|null}
+   */
+  getSemesterAliases(semester) {
+    if (!semester) return null;
+    const normalized = semester.toString().trim().toLowerCase();
+
+    if (["fall", "1"].includes(normalized)) {
+      return ["Fall", "fall", "1"];
+    }
+    if (["spring", "2"].includes(normalized)) {
+      return ["Spring", "spring", "2"];
+    }
+    if (["summer", "3"].includes(normalized)) {
+      return ["Summer", "summer", "3"];
+    }
+    return [semester];
+  }
+
+  /**
    * Get dashboard statistics for staff
    * @param {string} staffId - Staff UUID
+   * @param {string} semester - Optional semester filter (e.g., "Fall", "1")
+   * @param {number} year - Optional year filter (e.g., 2025)
    * @returns {Promise<Object>} Dashboard stats
    */
-  async getDashboardStats(staffId) {
-    // Get total classes
-    const { data: classesData, error: classesError } = await this.supabase
+  async getDashboardStats(staffId, semester = null, year = null) {
+    const semesterAliases = this.getSemesterAliases(semester);
+
+    // Build query for classes
+    let classesQuery = this.supabase
       .from("classes")
       .select("id", { count: "exact" })
       .eq("staff_id", staffId);
+
+    // Filter by semester and year if provided
+    if (semesterAliases) {
+      classesQuery = classesQuery.in("semester", semesterAliases);
+    }
+    if (year) {
+      classesQuery = classesQuery.eq("year", year);
+    }
+
+    const { data: classesData, error: classesError } = await classesQuery;
 
     if (classesError) {
       console.error("Error fetching classes count:", classesError);
@@ -177,11 +212,21 @@ export class StaffService {
 
     const totalClasses = classesData?.length || 0;
 
-    // Get total students enrolled in staff's classes
-    const { data: classesList, error: classesListError } = await this.supabase
+    // Get classes list for student count
+    let classesListQuery = this.supabase
       .from("classes")
       .select("id")
       .eq("staff_id", staffId);
+
+    // Filter by semester and year if provided
+    if (semesterAliases) {
+      classesListQuery = classesListQuery.in("semester", semesterAliases);
+    }
+    if (year) {
+      classesListQuery = classesListQuery.eq("year", year);
+    }
+
+    const { data: classesList, error: classesListError } = await classesListQuery;
 
     if (classesListError) {
       console.error("Error fetching classes list:", classesListError);
@@ -247,9 +292,9 @@ export class StaffService {
       const month = monthNames[date.getMonth()];
       const year = date.getFullYear();
 
-      // Determine status based on current date
-      const today = new Date();
-      const isPaid = salary.month_year <= today;
+      // Determine status based on boolean column:
+      // NULL or FALSE => pending, TRUE => paid
+      const isPaid = salary.status === true;
 
       return {
         id: salary.id,

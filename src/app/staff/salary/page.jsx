@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Salary } from '@/models/Salary'
-import { Calendar, DollarSign } from 'lucide-react'
-import { ThreeDots } from 'react-loader-spinner'
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Salary } from '@/models/Salary';
+import { Calendar, DollarSign } from 'lucide-react';
+import { ThreeDots } from 'react-loader-spinner';
 
 export default function StaffSalaryPage() {
-  const [salaries, setSalaries] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [salaries, setSalaries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchSalaries = async () => {
     try {
-      const response = await fetch('/api/staff/salary')
-      const data = await response.json()
+      const response = await fetch('/api/staff/salary');
+      const data = await response.json();
 
       if (data.success && data.salaries) {
         const salaryObjects = data.salaries.map(
@@ -25,23 +25,23 @@ export default function StaffSalaryPage() {
               sal.date,
               sal.status
             )
-        )
-        setSalaries(salaryObjects)
+        );
+        setSalaries(salaryObjects);
       } else {
-        console.error('Error fetching salaries:', data.error)
-        setSalaries([])
+        console.error('Error fetching salaries:', data.error);
+        setSalaries([]);
       }
     } catch (error) {
-      console.error('Error fetching salaries:', error)
-      setSalaries([])
+      console.error('Error fetching salaries:', error);
+      setSalaries([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchSalaries()
-  }, [])
+    fetchSalaries();
+  }, []);
 
   if (loading) {
     return (
@@ -57,7 +57,7 @@ export default function StaffSalaryPage() {
           wrapperClass=""
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -82,7 +82,7 @@ export default function StaffSalaryPage() {
                   <div className="flex items-center space-x-2">
                     <DollarSign className="w-5 h-5" />
                     <p className="text-lg font-semibold">
-                      {salary.getAmount()} VND
+                      {salary.getAmount()}
                     </p>
                   </div>
                 </div>
@@ -108,5 +108,5 @@ export default function StaffSalaryPage() {
         ))}
       </div>
     </div>
-  )
+  );
 }

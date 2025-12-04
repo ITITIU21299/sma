@@ -1,38 +1,38 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, GraduationCap, Megaphone, Calendar } from 'lucide-react'
-import { ThreeDots } from 'react-loader-spinner'
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, GraduationCap, Megaphone, Calendar } from 'lucide-react';
+import { ThreeDots } from 'react-loader-spinner';
 
 export default function StaffDashboard() {
-  const [staff, setStaff] = useState(null)
-  const [totalStudents, setTotalStudents] = useState(0)
-  const [totalClasses, setTotalClasses] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [staff, setStaff] = useState(null);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [totalClasses, setTotalClasses] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const response = await fetch('/api/staff/dashboard')
-      const data = await response.json()
+      const response = await fetch('/api/staff/dashboard');
+      const data = await response.json();
 
       if (data.success) {
-        setStaff({ name: data.staff?.full_name || 'Staff' })
-        setTotalStudents(data.stats?.totalStudents || 0)
-        setTotalClasses(data.stats?.totalClasses || 0)
+        setStaff({ name: data.staff?.full_name || 'Staff' });
+        setTotalStudents(data.stats?.totalStudents || 0);
+        setTotalClasses(data.stats?.totalClasses || 0);
       } else {
-        console.error('Error fetching dashboard data:', data.error)
+        console.error('Error fetching dashboard data:', data.error);
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error)
+      console.error('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
@@ -48,7 +48,7 @@ export default function StaffDashboard() {
           wrapperClass=""
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -60,7 +60,7 @@ export default function StaffDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Users className="w-5 h-5" />
-              <span className="text-2xl">Number of Students</span>
+              <span className="text-2xl">Students This Semester</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -72,7 +72,7 @@ export default function StaffDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <GraduationCap className="w-5 h-5" />
-              <span className="text-2xl">Total Classes</span>
+              <span className="text-2xl">Classes This Semester</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -127,5 +127,5 @@ export default function StaffDashboard() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

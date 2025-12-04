@@ -25,6 +25,7 @@ export default function StaffSchedulePage() {
   )
 
   // Calculate current week based on today's date and semester start date
+  // Each semester lasts 15 weeks (Fall: starts first week of September, Spring: starts first week of January)
   const calculateCurrentWeek = (startDate, semester) => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -32,49 +33,16 @@ export default function StaffSchedulePage() {
     start.setHours(0, 0, 0, 0)
     
     if (today < start) {
-      // If today is before semester start, return first week of that semester
-      switch (semester) {
-        case 'Fall':
-          return 1
-        case 'Spring':
-          return 20
-        case 'Summer':
-          return 41
-        default:
-          return 1
-      }
+      // If today is before semester start, return first week
+      return 1
     }
     
     const diffTime = today - start
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     const week = Math.floor(diffDays / 7) + 1
     
-    // Determine semester boundaries
-    let minWeek, maxWeek
-    switch (semester) {
-      case 'Fall':
-        minWeek = 1
-        maxWeek = 19
-        break
-      case 'Spring':
-        minWeek = 20
-        maxWeek = 40
-        break
-      case 'Summer':
-        minWeek = 41
-        maxWeek = 52
-        break
-      default:
-        minWeek = 1
-        maxWeek = 19
-    }
-    
-    // If calculated week is outside semester range, return first week of semester
-    if (week < minWeek || week > maxWeek) {
-      return minWeek
-    }
-    
-    return week
+    // Cap at week 15 (semester length)
+    return Math.min(Math.max(week, 1), 15)
   }
 
   const [currentWeek, setCurrentWeek] = useState(() => 
@@ -215,55 +183,24 @@ export default function StaffSchedulePage() {
   }
 
   const handleFirstWeek = () => {
-    switch (selectedSemester) {
-      case 'Fall':
-        setCurrentWeek(1)
-        break
-      case 'Spring':
-        setCurrentWeek(20)
-        break
-      case 'Summer':
-        setCurrentWeek(41)
-        break
-      default:
-        setCurrentWeek(1)
-    }
+    setCurrentWeek(1)
   }
 
   const handlePreviousWeek = () => {
-    if (
-      (selectedSemester === 'Fall' && currentWeek > 1) ||
-      (selectedSemester === 'Spring' && currentWeek > 20) ||
-      (selectedSemester === 'Summer' && currentWeek > 41)
-    ) {
+    if (currentWeek > 1) {
       setCurrentWeek(currentWeek - 1)
     }
   }
 
   const handleNextWeek = () => {
-    if (
-      (selectedSemester === 'Fall' && currentWeek < 19) ||
-      (selectedSemester === 'Spring' && currentWeek < 40) ||
-      (selectedSemester === 'Summer' && currentWeek < 52)
-    ) {
+    if (currentWeek < 15) {
       setCurrentWeek(currentWeek + 1)
     }
   }
 
   const handleLastWeek = () => {
-    switch (selectedSemester) {
-      case 'Fall':
-        setCurrentWeek(19)
-        break
-      case 'Spring':
-        setCurrentWeek(40)
-        break
-      case 'Summer':
-        setCurrentWeek(52)
-        break
-      default:
-        setCurrentWeek(19)
-    }
+    // Semester lasts 15 weeks
+    setCurrentWeek(15)
   }
 
   const fetchSemesters = async () => {

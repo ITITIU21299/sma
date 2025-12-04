@@ -36,8 +36,8 @@ export default function StudentSchedulePage() {
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     const week = Math.floor(diffDays / 7) + 1;
     
-    // Cap at week 16 (typical semester length)
-    return Math.min(Math.max(week, 1), 16);
+    // Cap at week 15 (semester length)
+    return Math.min(Math.max(week, 1), 15);
   };
 
   const [currentWeek, setCurrentWeek] = useState(() => 
@@ -256,12 +256,14 @@ export default function StudentSchedulePage() {
   };
 
   const handleNextWeek = () => {
-    setCurrentWeek(currentWeek + 1);
+    if (currentWeek < 15) {
+      setCurrentWeek(currentWeek + 1);
+    }
   };
 
   const handleLastWeek = () => {
-    // Assuming 16 weeks per semester
-    setCurrentWeek(16);
+    // Semester lasts 15 weeks
+    setCurrentWeek(15);
   };
 
   if (loading) {
