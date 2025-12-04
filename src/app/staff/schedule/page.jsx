@@ -30,7 +30,7 @@ export default function StaffSchedulePage() {
     today.setHours(0, 0, 0, 0)
     const start = new Date(startDate)
     start.setHours(0, 0, 0, 0)
-    
+
     if (today < start) {
       // If today is before semester start, return first week of that semester
       switch (semester) {
@@ -44,11 +44,11 @@ export default function StaffSchedulePage() {
           return 1
       }
     }
-    
+
     const diffTime = today - start
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     const week = Math.floor(diffDays / 7) + 1
-    
+
     // Determine semester boundaries
     let minWeek, maxWeek
     switch (semester) {
@@ -68,16 +68,16 @@ export default function StaffSchedulePage() {
         minWeek = 1
         maxWeek = 19
     }
-    
+
     // If calculated week is outside semester range, return first week of semester
     if (week < minWeek || week > maxWeek) {
       return minWeek
     }
-    
+
     return week
   }
 
-  const [currentWeek, setCurrentWeek] = useState(() => 
+  const [currentWeek, setCurrentWeek] = useState(() =>
     calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
   )
 
@@ -283,7 +283,9 @@ export default function StaffSchedulePage() {
           setSemesterStartDate(startDate)
           setCurrentWeek(calculateCurrentWeek(startDate, firstSem.semester))
         } else {
-          setCurrentWeek(calculateCurrentWeek(new Date('2025-09-01'), firstSem.semester))
+          setCurrentWeek(
+            calculateCurrentWeek(new Date('2025-09-01'), firstSem.semester)
+          )
         }
       } else {
         // Default fallback
@@ -328,10 +330,6 @@ export default function StaffSchedulePage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSetFirstWeek = () => {
-    setCurrentWeek(calculateCurrentWeek(semesterStartDate, selectedSemester))
   }
 
   // Fetch available semesters on mount
