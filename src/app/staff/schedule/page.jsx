@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import {
   Calendar,
   ChevronLeft,
@@ -9,53 +9,53 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Printer,
-} from 'lucide-react';
-import { ThreeDots } from 'react-loader-spinner';
+} from 'lucide-react'
+import { ThreeDots } from 'react-loader-spinner'
 
 export default function StaffSchedulePage() {
-  const [timetableData, setTimetableData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [availableSemesters, setAvailableSemesters] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState('Fall');
+  const [timetableData, setTimetableData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [availableSemesters, setAvailableSemesters] = useState([])
+  const [selectedSemester, setSelectedSemester] = useState('Fall')
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear().toString()
-  );
+  )
   const [semesterStartDate, setSemesterStartDate] = useState(
     new Date('2025-09-01')
-  );
-  const [currentSemesterInfo, setCurrentSemesterInfo] = useState(null);
+  )
+  const [currentSemesterInfo, setCurrentSemesterInfo] = useState(null)
 
   // Helper: normalize semester label to a canonical name
   const normalizeSemesterLabel = (semester) => {
-    if (!semester) return '';
-    const s = semester.toString().trim().toLowerCase();
-    if (s === 'fall' || s === '1') return 'Fall';
-    if (s === 'spring' || s === '2') return 'Spring';
-    if (s === 'summer' || s === '3') return 'Summer';
-    return semester;
-  };
+    if (!semester) return ''
+    const s = semester.toString().trim().toLowerCase()
+    if (s === 'fall' || s === '1') return 'Fall'
+    if (s === 'spring' || s === '2') return 'Spring'
+    if (s === 'summer' || s === '3') return 'Summer'
+    return semester
+  }
 
   // Helper: get semester start date from semester label + year
   const getSemesterStartDate = (semester, year) => {
-    const normalized = normalizeSemesterLabel(semester);
-    const y = parseInt(year, 10) || new Date().getFullYear();
+    const normalized = normalizeSemesterLabel(semester)
+    const y = parseInt(year, 10) || new Date().getFullYear()
 
     if (normalized === 'Fall') {
       // First week of September
-      return new Date(y, 8, 1);
+      return new Date(y, 8, 1)
     }
     if (normalized === 'Spring') {
       // First week of January
-      return new Date(y, 0, 1);
+      return new Date(y, 0, 1)
     }
     if (normalized === 'Summer') {
       // Reasonable default for summer term
-      return new Date(y, 5, 1); // June 1
+      return new Date(y, 5, 1) // June 1
     }
 
     // Fallback: January 1
-    return new Date(y, 0, 1);
-  };
+    return new Date(y, 0, 1)
+  }
 
   // Calculate current week based on today's date and semester start date
   // Each semester lasts 15 weeks (Fall: starts first week of September, Spring: starts first week of January)
@@ -64,7 +64,7 @@ export default function StaffSchedulePage() {
     today.setHours(0, 0, 0, 0)
     const start = new Date(startDate)
     start.setHours(0, 0, 0, 0)
-    
+
     if (today < start) {
       // If today is before semester start, return first week of that semester
       switch (semester) {
@@ -112,48 +112,47 @@ export default function StaffSchedulePage() {
   }
 
   const [currentWeek, setCurrentWeek] = useState(() =>
-  const [currentWeek, setCurrentWeek] = useState(() =>
     calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
-  );
+  )
 
   // Generate time units: Unit 1 starts at 8:00 AM, each unit is 50 minutes
   const generateTimeUnits = () => {
-    const units = [];
-    let hour = 8;
-    let minute = 0;
+    const units = []
+    let hour = 8
+    let minute = 0
 
     for (let i = 1; i <= 16; i++) {
       const startTime = `${hour.toString().padStart(2, '0')}:${minute
         .toString()
-        .padStart(2, '0')}`;
-      minute += 50;
+        .padStart(2, '0')}`
+      minute += 50
       if (minute >= 60) {
-        hour += 1;
-        minute -= 60;
+        hour += 1
+        minute -= 60
       }
       const endTime = `${hour.toString().padStart(2, '0')}:${minute
         .toString()
-        .padStart(2, '0')}`;
-      units.push({ unit: i, startTime, endTime });
+        .padStart(2, '0')}`
+      units.push({ unit: i, startTime, endTime })
     }
-    return units;
-  };
+    return units
+  }
 
-  const timeUnits = generateTimeUnits();
+  const timeUnits = generateTimeUnits()
 
   // Calculate week date range
   const getWeekDateRange = (week) => {
-    const startDate = new Date(semesterStartDate);
-    startDate.setDate(startDate.getDate() + (week - 1) * 7);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 6);
+    const startDate = new Date(semesterStartDate)
+    startDate.setDate(startDate.getDate() + (week - 1) * 7)
+    const endDate = new Date(startDate)
+    endDate.setDate(endDate.getDate() + 6)
 
     const formatDate = (date) => {
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
+    }
 
     return {
       start: startDate,
@@ -161,10 +160,10 @@ export default function StaffSchedulePage() {
       formatted: `Week ${week} [${formatDate(startDate)} -- ${formatDate(
         endDate
       )}]`,
-    };
-  };
+    }
+  }
 
-  const weekRange = getWeekDateRange(currentWeek);
+  const weekRange = getWeekDateRange(currentWeek)
 
   // Get day name from day_of_week (1=Monday, 7=Sunday)
   const getDayName = (dayOfWeek) => {
@@ -176,123 +175,123 @@ export default function StaffSchedulePage() {
       'Friday',
       'Saturday',
       'Sunday',
-    ];
-    return days[dayOfWeek - 1];
-  };
+    ]
+    return days[dayOfWeek - 1]
+  }
 
   // Convert time string (HH:MM or HH:MM:SS) to minutes since midnight
   const timeToMinutes = (timeStr) => {
-    const parts = timeStr.split(':');
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    return hours * 60 + minutes;
-  };
+    const parts = timeStr.split(':')
+    const hours = parseInt(parts[0], 10)
+    const minutes = parseInt(parts[1], 10)
+    return hours * 60 + minutes
+  }
 
   // Get unit number from time (Unit 1 starts at 8:00 = 480 minutes)
   const getUnitFromTime = (timeStr) => {
-    const minutes = timeToMinutes(timeStr);
-    const startMinutes = 8 * 60; // 8:00 AM
-    const diff = minutes - startMinutes;
-    if (diff < 0) return null;
-    const unit = Math.floor(diff / 50) + 1;
-    return unit <= 16 ? unit : null;
-  };
+    const minutes = timeToMinutes(timeStr)
+    const startMinutes = 8 * 60 // 8:00 AM
+    const diff = minutes - startMinutes
+    if (diff < 0) return null
+    const unit = Math.floor(diff / 50) + 1
+    return unit <= 16 ? unit : null
+  }
 
   // Get number of units a class spans
   const getUnitsSpan = (startTime, endTime) => {
-    const startUnit = getUnitFromTime(startTime);
-    const endUnit = getUnitFromTime(endTime);
-    if (!startUnit || !endUnit) return 1;
-    return Math.max(1, endUnit - startUnit);
-  };
+    const startUnit = getUnitFromTime(startTime)
+    const endUnit = getUnitFromTime(endTime)
+    if (!startUnit || !endUnit) return 1
+    return Math.max(1, endUnit - startUnit)
+  }
 
   // Organize data by day and unit
   const organizeTimetable = () => {
-    const organized = {};
-    const spannedCells = new Set(); // Track cells that are part of a rowspan
+    const organized = {}
+    const spannedCells = new Set() // Track cells that are part of a rowspan
 
     for (let day = 1; day <= 7; day++) {
-      organized[day] = {};
+      organized[day] = {}
       for (let unit = 1; unit <= 16; unit++) {
-        organized[day][unit] = null;
+        organized[day][unit] = null
       }
     }
 
     timetableData.forEach((item) => {
-      const unit = getUnitFromTime(item.start_time);
+      const unit = getUnitFromTime(item.start_time)
       if (unit) {
-        const unitsSpan = getUnitsSpan(item.start_time, item.end_time);
+        const unitsSpan = getUnitsSpan(item.start_time, item.end_time)
         if (!organized[item.day_of_week][unit]) {
           organized[item.day_of_week][unit] = {
             ...item,
             unitsSpan,
-          };
+          }
           // Mark subsequent units as spanned
           for (let i = 1; i < unitsSpan; i++) {
-            spannedCells.add(`${item.day_of_week}-${unit + i}`);
+            spannedCells.add(`${item.day_of_week}-${unit + i}`)
           }
         }
       }
-    });
+    })
 
-    return { organized, spannedCells };
-  };
+    return { organized, spannedCells }
+  }
 
-  const { organized: organizedData, spannedCells } = organizeTimetable();
+  const { organized: organizedData, spannedCells } = organizeTimetable()
 
   const handlePrint = () => {
-    window.print();
-  };
+    window.print()
+  }
 
   const formatTime = (time) => {
-    const [hours, minutes] = time.split(':');
-    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-  };
+    const [hours, minutes] = time.split(':')
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+  }
 
   const handleFirstWeek = () => {
-    setCurrentWeek(1);
-  };
+    setCurrentWeek(1)
+  }
 
   const handlePreviousWeek = () => {
     if (currentWeek > 1) {
-      setCurrentWeek(currentWeek - 1);
+      setCurrentWeek(currentWeek - 1)
     }
-  };
+  }
 
   const handleNextWeek = () => {
     if (currentWeek < 15) {
-      setCurrentWeek(currentWeek + 1);
+      setCurrentWeek(currentWeek + 1)
     }
-  };
+  }
 
   const handleLastWeek = () => {
     // Semester lasts 15 weeks
-    setCurrentWeek(15);
-  };
+    setCurrentWeek(15)
+  }
 
   const fetchSemesters = async () => {
     try {
-      const response = await fetch('/api/staff/semesters');
-      const data = await response.json();
+      const response = await fetch('/api/staff/semesters')
+      const data = await response.json()
 
       if (data.success && data.semesters.length > 0) {
-        const semesters = data.semesters;
-        setAvailableSemesters(semesters);
+        const semesters = data.semesters
+        setAvailableSemesters(semesters)
 
         // Determine current semester based on today's date
-        const today = new Date();
-        const year = today.getFullYear();
-        const fallStart = new Date(year, 8, 1); // September 1
-        const springStart = new Date(year, 0, 1); // January 1
+        const today = new Date()
+        const year = today.getFullYear()
+        const fallStart = new Date(year, 8, 1) // September 1
+        const springStart = new Date(year, 0, 1) // January 1
 
-        let targetLabel = 'Spring';
-        let targetYear = year;
+        let targetLabel = 'Spring'
+        let targetYear = year
         if (today >= fallStart) {
-          targetLabel = 'Fall';
-          targetYear = year;
+          targetLabel = 'Fall'
+          targetYear = year
         } else if (today >= springStart) {
-          targetLabel = 'Spring';
-          targetYear = year;
+          targetLabel = 'Spring'
+          targetYear = year
         }
 
         const currentSem =
@@ -300,41 +299,41 @@ export default function StaffSchedulePage() {
             (s) =>
               normalizeSemesterLabel(s.semester) === targetLabel &&
               Number(s.year) === targetYear
-          ) || semesters[0];
+          ) || semesters[0]
 
-        setCurrentSemesterInfo(currentSem);
-        setSelectedSemester(currentSem.semester);
-        setSelectedYear(currentSem.year.toString());
+        setCurrentSemesterInfo(currentSem)
+        setSelectedSemester(currentSem.semester)
+        setSelectedYear(currentSem.year.toString())
 
         const startDate = getSemesterStartDate(
           currentSem.semester,
           currentSem.year
-        );
-        setSemesterStartDate(startDate);
-        setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester));
+        )
+        setSemesterStartDate(startDate)
+        setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester))
       } else {
         // Default fallback: build semesters around current academic year
-        const currentYear = new Date().getFullYear();
+        const currentYear = new Date().getFullYear()
         const fallbackSemesters = [
           { semester: 'Fall', year: currentYear },
           { semester: 'Spring', year: currentYear + 1 },
           { semester: 'Summer', year: currentYear + 1 },
-        ];
-        setAvailableSemesters(fallbackSemesters);
+        ]
+        setAvailableSemesters(fallbackSemesters)
 
         // Choose current semester from fallback
-        const today = new Date();
-        const year = today.getFullYear();
-        const fallStart = new Date(year, 8, 1);
-        const springStart = new Date(year, 0, 1);
-        let targetLabel = 'Spring';
-        let targetYear = year;
+        const today = new Date()
+        const year = today.getFullYear()
+        const fallStart = new Date(year, 8, 1)
+        const springStart = new Date(year, 0, 1)
+        let targetLabel = 'Spring'
+        let targetYear = year
         if (today >= fallStart) {
-          targetLabel = 'Fall';
-          targetYear = year;
+          targetLabel = 'Fall'
+          targetYear = year
         } else if (today >= springStart) {
-          targetLabel = 'Spring';
-          targetYear = year;
+          targetLabel = 'Spring'
+          targetYear = year
         }
 
         const currentSem =
@@ -342,42 +341,42 @@ export default function StaffSchedulePage() {
             (s) =>
               normalizeSemesterLabel(s.semester) === targetLabel &&
               Number(s.year) === targetYear
-          ) || fallbackSemesters[0];
+          ) || fallbackSemesters[0]
 
-        setCurrentSemesterInfo(currentSem);
-        setSelectedSemester(currentSem.semester);
-        setSelectedYear(currentSem.year.toString());
+        setCurrentSemesterInfo(currentSem)
+        setSelectedSemester(currentSem.semester)
+        setSelectedYear(currentSem.year.toString())
 
         const startDate = getSemesterStartDate(
           currentSem.semester,
           currentSem.year
-        );
-        setSemesterStartDate(startDate);
-        setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester));
+        )
+        setSemesterStartDate(startDate)
+        setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester))
       }
     } catch (error) {
-      console.error('Error fetching semesters:', error);
+      console.error('Error fetching semesters:', error)
       // Default fallback in case of error
-      const currentYear = new Date().getFullYear();
+      const currentYear = new Date().getFullYear()
       const fallbackSemesters = [
         { semester: 'Fall', year: currentYear },
         { semester: 'Spring', year: currentYear + 1 },
         { semester: 'Summer', year: currentYear + 1 },
-      ];
-      setAvailableSemesters(fallbackSemesters);
+      ]
+      setAvailableSemesters(fallbackSemesters)
 
-      const today = new Date();
-      const year = today.getFullYear();
-      const fallStart = new Date(year, 8, 1);
-      const springStart = new Date(year, 0, 1);
-      let targetLabel = 'Spring';
-      let targetYear = year;
+      const today = new Date()
+      const year = today.getFullYear()
+      const fallStart = new Date(year, 8, 1)
+      const springStart = new Date(year, 0, 1)
+      let targetLabel = 'Spring'
+      let targetYear = year
       if (today >= fallStart) {
-        targetLabel = 'Fall';
-        targetYear = year;
+        targetLabel = 'Fall'
+        targetYear = year
       } else if (today >= springStart) {
-        targetLabel = 'Spring';
-        targetYear = year;
+        targetLabel = 'Spring'
+        targetYear = year
       }
 
       const currentSem =
@@ -385,42 +384,42 @@ export default function StaffSchedulePage() {
           (s) =>
             normalizeSemesterLabel(s.semester) === targetLabel &&
             Number(s.year) === targetYear
-        ) || fallbackSemesters[0];
+        ) || fallbackSemesters[0]
 
-      setCurrentSemesterInfo(currentSem);
-      setSelectedSemester(currentSem.semester);
-      setSelectedYear(currentSem.year.toString());
+      setCurrentSemesterInfo(currentSem)
+      setSelectedSemester(currentSem.semester)
+      setSelectedYear(currentSem.year.toString())
 
       const startDate = getSemesterStartDate(
         currentSem.semester,
         currentSem.year
-      );
-      setSemesterStartDate(startDate);
-      setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester));
+      )
+      setSemesterStartDate(startDate)
+      setCurrentWeek(calculateCurrentWeek(startDate, currentSem.semester))
     }
-  };
+  }
 
   const fetchTimetable = async () => {
-    if (!selectedSemester || !selectedYear) return;
+    if (!selectedSemester || !selectedYear) return
 
     try {
-      setLoading(true);
+      setLoading(true)
       const response = await fetch(
         `/api/staff/timetable?semester=${selectedSemester}&year=${selectedYear}&week=${currentWeek}`
-      );
-      const data = await response.json();
+      )
+      const data = await response.json()
 
       if (data.success) {
-        setTimetableData(data.data || []);
+        setTimetableData(data.data || [])
       } else {
-        console.error('Error fetching timetable:', data.error);
-        setTimetableData([]);
+        console.error('Error fetching timetable:', data.error)
+        setTimetableData([])
       }
     } catch (error) {
-      console.error('Error fetching timetable:', error);
-      setTimetableData([]);
+      console.error('Error fetching timetable:', error)
+      setTimetableData([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -430,15 +429,15 @@ export default function StaffSchedulePage() {
 
   // Fetch available semesters on mount
   useEffect(() => {
-    fetchSemesters();
-  }, []);
+    fetchSemesters()
+  }, [])
 
   // When selected semester/year changes, update start date and week
   useEffect(() => {
-    if (!selectedSemester || !selectedYear) return;
+    if (!selectedSemester || !selectedYear) return
 
-    const startDate = getSemesterStartDate(selectedSemester, selectedYear);
-    setSemesterStartDate(startDate);
+    const startDate = getSemesterStartDate(selectedSemester, selectedYear)
+    setSemesterStartDate(startDate)
 
     // If this is the real current semester, use the real current week.
     // Otherwise (outside current semester), default to week 1.
@@ -448,16 +447,16 @@ export default function StaffSchedulePage() {
         normalizeSemesterLabel(selectedSemester) &&
       String(currentSemesterInfo.year) === String(selectedYear)
     ) {
-      setCurrentWeek(calculateCurrentWeek(startDate, selectedSemester));
+      setCurrentWeek(calculateCurrentWeek(startDate, selectedSemester))
     } else {
-      setCurrentWeek(1);
+      setCurrentWeek(1)
     }
-  }, [selectedSemester, selectedYear, currentSemesterInfo]);
+  }, [selectedSemester, selectedYear, currentSemesterInfo])
 
   // Fetch timetable data
   useEffect(() => {
-    fetchTimetable();
-  }, [selectedSemester, selectedYear, currentWeek]);
+    fetchTimetable()
+  }, [selectedSemester, selectedYear, currentWeek])
 
   if (loading && timetableData.length === 0) {
     return (
@@ -473,7 +472,7 @@ export default function StaffSchedulePage() {
           wrapperClass=""
         />
       </div>
-    );
+    )
   }
 
   return (
@@ -487,9 +486,9 @@ export default function StaffSchedulePage() {
             <select
               value={`${selectedSemester}-${selectedYear}`}
               onChange={(e) => {
-                const [sem, year] = e.target.value.split('-');
-                setSelectedSemester(sem);
-                setSelectedYear(year);
+                const [sem, year] = e.target.value.split('-')
+                setSelectedSemester(sem)
+                setSelectedYear(year)
               }}
               className="px-3 py-2 border rounded-md bg-background cursor-pointer"
             >
@@ -551,7 +550,7 @@ export default function StaffSchedulePage() {
             </thead>
             <tbody>
               {timeUnits.map(({ unit, startTime, endTime }) => {
-                const rowCells = [];
+                const rowCells = []
 
                 // Left Time Label
                 rowCells.push(
@@ -562,24 +561,24 @@ export default function StaffSchedulePage() {
                     Period {unit} <br />
                     {startTime} - {endTime}
                   </td>
-                );
+                )
 
                 // Day Columns
                 for (let day = 1; day <= 7; day++) {
-                  const cellKey = `${day}-${unit}`;
+                  const cellKey = `${day}-${unit}`
 
                   // Skip if this cell is part of a rowspan from a previous unit
                   if (spannedCells.has(cellKey)) {
-                    continue;
+                    continue
                   }
 
-                  const schedule = organizedData[day][unit];
+                  const schedule = organizedData[day][unit]
                   const startUnit = schedule
                     ? getUnitFromTime(schedule.start_time)
-                    : null;
+                    : null
 
                   if (schedule && startUnit === unit) {
-                    const rowSpan = schedule.unitsSpan || 1;
+                    const rowSpan = schedule.unitsSpan || 1
                     rowCells.push(
                       <td
                         key={cellKey}
@@ -599,18 +598,18 @@ export default function StaffSchedulePage() {
                           </span>
                         </div>
                       </td>
-                    );
+                    )
                   } else {
                     rowCells.push(
                       <td
                         key={cellKey}
                         className="bg-background p-2 border min-h-[60px]"
                       ></td>
-                    );
+                    )
                   }
                 }
 
-                return <tr key={unit}>{rowCells}</tr>;
+                return <tr key={unit}>{rowCells}</tr>
               })}
             </tbody>
           </table>
@@ -639,5 +638,5 @@ export default function StaffSchedulePage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
