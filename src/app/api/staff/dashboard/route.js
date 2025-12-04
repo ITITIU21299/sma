@@ -3,6 +3,31 @@ import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { StaffService } from "@/services/StaffService";
 import { handleApiError } from "@/lib/api-helpers";
 
+/**
+ * Determine current semester based on date.
+ * Fall semester starts the first week of September and lasts 15 weeks.
+ * Spring semester starts the first week of January.
+ * @returns {{semester: string, year: number}}
+ */
+function getCurrentSemester() {
+  const today = new Date();
+  const year = today.getFullYear();
+
+  const fallStart = new Date(year, 8, 1); // September 1 (month index 8)
+  const springStart = new Date(year, 0, 1); // January 1
+
+  if (today >= fallStart) {
+    return { semester: "Fall", year };
+  }
+
+  if (today >= springStart) {
+    return { semester: "Spring", year };
+  }
+
+  // Fallback (should not hit)
+  return { semester: "Spring", year };
+}
+
 export async function GET(request) {
   try {
     // Get session from cookie
@@ -33,15 +58,23 @@ export async function GET(request) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
     }
 
-    // Get staff profile and dashboard stats
+    // Get current semester
+    const currentSemester = getCurrentSemester();
+
+    // Get staff profile and dashboard stats for current semester
     try {
       const staffProfile = await staffService.getStaffProfile(staffId);
-      const stats = await staffService.getDashboardStats(staffId);
+      const stats = await staffService.getDashboardStats(
+        staffId,
+        currentSemester.semester,
+        currentSemester.year
+      );
 
       return NextResponse.json({
         success: true,
         staff: staffProfile,
         stats,
+        currentSemester,
       });
     } catch (error) {
       return handleApiError(error, "staff dashboard stats");
