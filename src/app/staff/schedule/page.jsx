@@ -24,9 +24,7 @@ export default function StaffSchedulePage() {
     new Date('2025-09-01')
   )
   const [currentSemesterInfo, setCurrentSemesterInfo] = useState(null)
-  const [currentWeek, setCurrentWeek] = useState(() =>
-    calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
-  )
+  const [currentWeek, setCurrentWeek] = useState(null)
 
   // Helper: normalize semester label to a canonical name
   const normalizeSemesterLabel = (semester) => {
@@ -420,10 +418,6 @@ export default function StaffSchedulePage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSetFirstWeek = () => {
-    setCurrentWeek(calculateCurrentWeek(semesterStartDate, selectedSemester))
   }
 
   // Fetch available semesters on mount
