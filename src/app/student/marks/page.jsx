@@ -97,7 +97,7 @@ export default function StudentMarksPage() {
               <option value="">-- Select a class --</option>
               {classes.map((cls) => (
                 <option key={cls.class_id} value={cls.class_id}>
-                  {cls.class_name} - {cls.subject_name} ({cls.semester}/{cls.year})
+                  {cls.class_name} ({cls.semester}/{cls.year})
                 </option>
               ))}
             </select>
@@ -115,7 +115,7 @@ export default function StudentMarksPage() {
                 <CardTitle className="flex items-center space-x-2">
                   <GraduationCap className="w-5 h-5" />
                   <span>
-                    {marks.class_name} - {marks.subject_name}
+                    {marks.class_name}
                   </span>
                 </CardTitle>
               </CardHeader>

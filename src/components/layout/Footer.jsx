@@ -13,8 +13,8 @@ export default function Footer() {
         height={150}
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 select-none pointer-events-none"
       />
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left font-montserrat">
+      <div className="container mx-auto px-4 flex flex-col">
+        <div className="flex flex-row justify-between items-start text-left font-montserrat">
           <div>
             <h3 className="text-base font-bold mb-2">
               School Management System

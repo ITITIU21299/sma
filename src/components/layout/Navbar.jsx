@@ -8,14 +8,15 @@ import {
   Calendar,
   CalendarCheck,
   DollarSign,
-  Users,
-  Settings,
   LogOut,
   User,
   MessageSquare,
   ClipboardList,
+  Sun,
 } from 'lucide-react'
+import logo from '@/../public/logo.png'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
 
 export default function Navbar({ userRole, userName }) {
   const pathname = usePathname()
@@ -92,15 +93,26 @@ export default function Navbar({ userRole, userName }) {
     <nav className="bg-primary text-primary-foreground shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link
-            href={
-              userRole === 'student' ? '/student/dashboard' : '/staff/dashboard'
-            }
-            className="text-xl font-bold font-montserrat"
-          >
-            School Management System
-          </Link>
-          <div className="flex items-center space-x-4">
+          <div className="flex space-x-2 items-center">
+            <Image
+              src={logo}
+              alt="School Management System Logo"
+              width={45}
+              height={45}
+              className="select-none pointer-events-none"
+            />
+            <Link
+              href={
+                userRole === 'student'
+                  ? '/student/dashboard'
+                  : '/staff/dashboard'
+              }
+              className="text-xl font-bold font-montserrat"
+            >
+              School Management System
+            </Link>
+          </div>
+          <div className="flex items-center space-x-4 font-medium">
             <div className="hidden lg:flex items-center space-x-2">
               {navItems.map((item) => {
                 const Icon = item.icon
@@ -128,28 +140,44 @@ export default function Navbar({ userRole, userName }) {
                 onClick={toggleDarkMode}
                 className="text-primary-foreground hover:bg-primary-foreground/10"
               >
-                <Settings className="w-4 h-4" />
+                <Sun className="w-4 h-4" />
+                {darkMode ? (
+                  <span className="hidden md:inline ml-2 font-montserrat text-base">
+                    Light
+                  </span>
+                ) : (
+                  <span className="hidden md:inline ml-2 font-montserrat text-base">
+                    Dark
+                  </span>
+                )}
               </Button>
-              <Link
-                href={profilePath}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleDarkMode}
+                className={`px-3 py-2 rounded-md transition-colors ${
                   isActive(profilePath)
                     ? 'bg-primary-foreground/20'
                     : 'hover:bg-primary-foreground/10'
                 }`}
               >
-                <User className="w-4 h-4" />
-                <span className="hidden md:inline font-montserrat">
-                  Profile
-                </span>
-              </Link>
+                <Link
+                  className="flex items-center space-x-1"
+                  href={profilePath}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden md:inline font-montserrat text-base">
+                    Profile
+                  </span>
+                </Link>
+              </Button>
               <Button
                 variant="ghost"
                 onClick={handleLogout}
                 className="text-primary-foreground hover:bg-primary-foreground/10 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline ml-2 font-montserrat text-base font-normal">
+                <span className="hidden md:inline ml-2 font-montserrat text-base">
                   Logout
                 </span>
               </Button>

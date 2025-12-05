@@ -119,7 +119,7 @@ export default function StudentAttendancePage() {
               <option value="">-- Select a class --</option>
               {classes.map((cls) => (
                 <option key={cls.class_id} value={cls.class_id}>
-                  {cls.class_name} - {cls.subject_name} ({cls.semester}/{cls.year})
+                  {cls.class_name} ({cls.semester}/{cls.year})
                 </option>
               ))}
             </select>
@@ -130,40 +130,52 @@ export default function StudentAttendancePage() {
       {selectedClassId && (
         <div className="space-y-4">
           <h2 className="text-2xl font-semibold">
-            Attendance for {selectedClass?.class_name} - {selectedClass?.subject_name}
+            Attendance for {selectedClass?.class_name}
           </h2>
 
           {loadingAttendance ? (
             <div>Loading attendance...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((section) => {
-                const sectionData = attendanceByWeek[section] || { status: null, records: [] };
-                const status = sectionData.status;
-                return (
-                  <Card key={section} className="hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Section {section}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {status === null ? (
-                        <p className="text-sm text-muted-foreground">No attendance recorded</p>
-                      ) : (
-                        <div className="flex flex-col items-center space-y-2">
-                          {getStatusIcon(status)}
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(
-                              status
-                            )}`}
-                          >
-                            {status}
-                          </span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(
+                (section) => {
+                  const sectionData = attendanceByWeek[section] || {
+                    status: null,
+                    records: [],
+                  };
+                  const status = sectionData.status;
+                  return (
+                    <Card
+                      key={section}
+                      className="hover:shadow-lg transition-shadow"
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Week {section}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {status === null ? (
+                          <p className="text-sm text-muted-foreground">
+                            No attendance recorded
+                          </p>
+                        ) : (
+                          <div className="flex flex-col items-center space-y-2">
+                            {getStatusIcon(status)}
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${getStatusColor(
+                                status
+                              )}`}
+                            >
+                              {status}
+                            </span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                }
+              )}
             </div>
           )}
         </div>
@@ -171,4 +183,3 @@ export default function StudentAttendancePage() {
     </div>
   );
 }
-
