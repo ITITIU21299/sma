@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, XCircle, Clock } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { ThreeDots } from 'react-loader-spinner'
+import { ToastContainer, toast } from 'react-toastify'
 
 export default function StaffAttendancePage() {
   const [classes, setClasses] = useState([])
@@ -14,9 +15,73 @@ export default function StaffAttendancePage() {
   const [students, setStudents] = useState([])
   const [attendance, setAttendance] = useState({})
   const [semesterStartDate, setSemesterStartDate] = useState('2025-09-01')
+  const [semesterWeek, setSemesterWeek] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadingStudents, setLoadingStudents] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('darkMode') === 'true'
+    }
+    return false
+  })
+
+  const getSemesterStartDate = (semester, year) => {
+    const y = parseInt(year, 10) || new Date().getFullYear()
+
+    switch (semester) {
+      case 'Fall':
+        return new Date(y, 8, 1) // September 1
+      case 'Spring':
+        return new Date(y, 0, 1) // January 1
+      case 'Summer':
+        return new Date(y, 5, 1) // June 1
+      default:
+        return new Date(y, 0, 1) // Fallback: January 1
+    }
+  }
+
+  const handleSelectClass = async (classId) => {
+    const cls = await classes.find((c) => c.id === classId)
+    console.log('Selected class:', cls)
+    setSelectedClass(cls || null)
+    setSemesterStartDate(
+      cls ? getSemesterStartDate(cls.semester, cls.year) : ''
+    )
+    handleSetSemesterWeek(cls ? cls.semester : '')
+    setSelectedSection(null) // Reset section when class changes
+  }
+
+  const handleSetSemesterWeek = (semester) => {
+    const weeks = []
+    let start, end
+
+    switch (semester) {
+      case 'Fall':
+        start = 1
+        end = 19
+        break
+      case 'Spring':
+        start = 20
+        end = 40
+        break
+      case 'Summer':
+        start = 43
+        end = 52
+        break
+      default:
+        start = 1
+        end = 19
+        break
+    }
+
+    for (let i = start; i <= end; i++) {
+      weeks.push(i)
+    }
+    console.log('Semester weeks:', weeks)
+    setSemesterWeek(weeks)
+  }
 
   const fetchClasses = async () => {
     try {
@@ -106,7 +171,7 @@ export default function StaffAttendancePage() {
 
   const handleSaveAttendance = async () => {
     if (!selectedClass || !selectedSection) {
-      alert('Please select a class and section')
+      toast.error('Please select a class and week before saving attendance.')
       return
     }
 
@@ -142,13 +207,13 @@ export default function StaffAttendancePage() {
       const data = await response.json()
 
       if (data.success) {
-        alert('Attendance saved successfully!')
+        toast.success('Attendance saved successfully!')
       } else {
-        alert(data.error || 'Failed to save attendance')
+        toast.error(`Error saving attendance: ${data.error}`)
       }
     } catch (error) {
       console.error('Error saving attendance:', error)
-      alert('An error occurred. Please try again.')
+      toast.error(`Error saving attendance: ${error}`)
     } finally {
       setSaving(false)
     }
@@ -173,6 +238,7 @@ export default function StaffAttendancePage() {
 
   return (
     <div className="space-y-6 font-roboto">
+      <ToastContainer theme={darkMode ? 'light' : 'dark'} />
       <h1 className="text-3xl font-bold">Manage Attendance</h1>
 
       {/* Class Selection */}
@@ -188,10 +254,7 @@ export default function StaffAttendancePage() {
                 id="classSelect"
                 value={selectedClass?.id || ''}
                 onChange={(e) => {
-                  const classId = e.target.value
-                  const cls = classes.find((c) => c.id === classId)
-                  setSelectedClass(cls || null)
-                  setSelectedSection(null) // Reset section when class changes
+                  handleSelectClass(e.target.value)
                 }}
                 className="w-full px-3 py-2 border rounded-md bg-background cursor-pointer"
               >
@@ -215,20 +278,16 @@ export default function StaffAttendancePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(
-                (section) => (
-                  <Button
-                    key={section}
-                    variant={
-                      selectedSection === section ? 'default' : 'outline'
-                    }
-                    onClick={() => setSelectedSection(section)}
-                    className="w-full cursor-pointer"
-                  >
-                    Week {section}
-                  </Button>
-                )
-              )}
+              {semesterWeek.map((section) => (
+                <Button
+                  key={section}
+                  variant={selectedSection === section ? 'default' : 'outline'}
+                  onClick={() => setSelectedSection(section)}
+                  className="w-full cursor-pointer"
+                >
+                  Week {section}
+                </Button>
+              ))}
             </div>
           </CardContent>
         </Card>

@@ -24,6 +24,9 @@ export default function StaffSchedulePage() {
     new Date('2025-09-01')
   )
   const [currentSemesterInfo, setCurrentSemesterInfo] = useState(null)
+  const [currentWeek, setCurrentWeek] = useState(() =>
+    calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
+  )
 
   // Helper: normalize semester label to a canonical name
   const normalizeSemesterLabel = (semester) => {
@@ -110,10 +113,6 @@ export default function StaffSchedulePage() {
 
     return week
   }
-
-  const [currentWeek, setCurrentWeek] = useState(() =>
-    calculateCurrentWeek(new Date('2025-09-01'), 'Fall')
-  )
 
   // Generate time units: Unit 1 starts at 8:00 AM, each unit is 50 minutes
   const generateTimeUnits = () => {
