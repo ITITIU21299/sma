@@ -149,6 +149,10 @@ export default function StaffAttendancePage() {
     fetchStudents()
   }, [selectedClass, selectedSection, semesterStartDate])
 
+  useEffect(() => {
+    setDarkMode(localStorage.getItem('darkMode') === 'true')
+  }, [localStorage.getItem('darkMode')])
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'present':

@@ -154,7 +154,6 @@ export default function Navbar({ userRole, userName }) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={toggleDarkMode}
                 className={`px-3 py-2 rounded-md transition-colors ${
                   isActive(profilePath)
                     ? 'bg-primary-foreground/20'

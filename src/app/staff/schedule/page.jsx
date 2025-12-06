@@ -58,8 +58,6 @@ export default function StaffSchedulePage() {
     return new Date(y, 0, 1)
   }
 
-  // Calculate current week based on today's date and semester start date
-  // Each semester lasts 15 weeks (Fall: starts first week of September, Spring: starts first week of January)
   const calculateCurrentWeek = (startDate, semester) => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -67,17 +65,7 @@ export default function StaffSchedulePage() {
     start.setHours(0, 0, 0, 0)
 
     if (today < start) {
-      // If today is before semester start, return first week of that semester
-      switch (semester) {
-        case 'Fall':
-          return 1
-        case 'Spring':
-          return 20
-        case 'Summer':
-          return 41
-        default:
-          return 1
-      }
+      return 1
     }
 
     const diffTime = today - start
@@ -85,24 +73,8 @@ export default function StaffSchedulePage() {
     const week = Math.floor(diffDays / 7) + 1
 
     // Determine semester boundaries
-    let minWeek, maxWeek
-    switch (semester) {
-      case 'Fall':
-        minWeek = 1
-        maxWeek = 19
-        break
-      case 'Spring':
-        minWeek = 20
-        maxWeek = 40
-        break
-      case 'Summer':
-        minWeek = 41
-        maxWeek = 52
-        break
-      default:
-        minWeek = 1
-        maxWeek = 19
-    }
+    const minWeek = 1
+    const maxWeek = 15 // Assuming semester lasts 15 weeks
 
     // If calculated week is outside semester range, return first week of semester
     if (week < minWeek || week > maxWeek) {

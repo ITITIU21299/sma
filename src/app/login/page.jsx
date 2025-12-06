@@ -1,63 +1,71 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff } from "lucide-react";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Eye, EyeOff } from 'lucide-react'
+import background from '@/../public/background.jpg'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || "Login failed");
-        setLoading(false);
-        return;
+        setError(data.error || 'Login failed')
+        setLoading(false)
+        return
       }
 
       // Redirect based on role
-      if (data.user.role === "staff") {
-        router.push("/staff/dashboard");
-      } else if (data.user.role === "student") {
-        router.push("/student/dashboard");
+      if (data.user.role === 'staff') {
+        router.push('/staff/dashboard')
+      } else if (data.user.role === 'student') {
+        router.push('/student/dashboard')
       } else {
-        router.push("/");
+        router.push('/')
       }
     } catch (error) {
-      console.error("Login error:", error);
-      setError("An error occurred. Please try again.");
-      setLoading(false);
+      console.error('Login error:', error)
+      setError('An error occurred. Please try again.')
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 relative overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-black/20 dark:bg-black/40" />
+        <Image
+          src={background}
+          alt="School Background"
+          layout="fill"
+          objectFit="cover"
+          className="opacity-20 dark:opacity-30"
+          priority
+        />
       </div>
 
       <div className="relative z-10 w-full max-w-md px-4">
@@ -93,7 +101,7 @@ export default function LoginPage() {
                 <div className="relative">
                   <Input
                     id="password"
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -119,12 +127,12 @@ export default function LoginPage() {
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
+                {loading ? 'Logging in...' : 'Login'}
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
     </div>
-  );
+  )
 }
