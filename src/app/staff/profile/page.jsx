@@ -59,14 +59,14 @@ export default function StaffProfilePage() {
   }
 
   return (
-    <div className="space-y-6 font-roboto">
-      <h1 className="text-3xl font-bold">Profile</h1>
+    <div className="font-roboto space-y-4">
+      <h1 className="text-2xl font-bold">Profile</h1>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <User className="w-5 h-5" />
-            <span>Staff Information</span>
+            <span className="text-lg font-semibold">Staff Information</span>
           </CardTitle>
         </CardHeader>
         <CardContent>

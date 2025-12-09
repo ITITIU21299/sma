@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Lock } from 'lucide-react'
+import { Eye, EyeOff, EyeOffIcon, Lock } from 'lucide-react'
 import { toast, ToastContainer } from 'react-toastify'
 
 export default function ChangePasswordPage() {
@@ -61,22 +61,23 @@ export default function ChangePasswordPage() {
     }
   }
 
+  const [isShowPassword, setIsShowPassword] = useState(false)
+
+  const handleShowPassword = (value) => {
+    setIsShowPassword(value)
+    console.log('Show password:', value)
+  }
+
   useEffect(() => {
     setDarkMode(localStorage.getItem('darkMode') === 'true')
   }, [localStorage.getItem('darkMode')])
 
   return (
     <div className="space-y-6 font-roboto">
+      <h1 className="text-2xl font-bold">Change Password</h1>
       <ToastContainer theme={darkMode ? 'light' : 'dark'} />
-      <h1 className="text-3xl font-bold">Change Password</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Lock className="w-5 h-5" />
-            <span>Change Your Password</span>
-          </CardTitle>
-        </CardHeader>
+      <Card className="pt-4">
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -91,10 +92,23 @@ export default function ChangePasswordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
+              <div className="flex items-center">
+                <Label htmlFor="newPassword">New Password</Label>
+                {isShowPassword ? (
+                  <EyeOffIcon
+                    className="ml-2 h-4 w-4 cursor-pointer"
+                    onClick={() => handleShowPassword(false)}
+                  />
+                ) : (
+                  <Eye
+                    className="ml-2 h-4 w-4 cursor-pointer"
+                    onClick={() => handleShowPassword(true)}
+                  />
+                )}
+              </div>
               <Input
                 id="newPassword"
-                type="password"
+                type={isShowPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -105,7 +119,7 @@ export default function ChangePasswordPage() {
               <Label htmlFor="confirmPassword">Confirm New Password</Label>
               <Input
                 id="confirmPassword"
-                type="password"
+                type={isShowPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -113,7 +127,7 @@ export default function ChangePasswordPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              Change Password
+              Change
             </Button>
           </form>
         </CardContent>

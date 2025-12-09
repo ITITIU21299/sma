@@ -441,7 +441,8 @@ export default function StaffSchedulePage() {
   }
 
   return (
-    <div className="space-y-4 p-6 bg-background font-roboto">
+    <div className="space-y-4 bg-background font-roboto">
+      <h1 className="text-2xl font-bold">Schedule</h1>
       {/* Header Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-4 flex-wrap">
@@ -455,7 +456,7 @@ export default function StaffSchedulePage() {
                 setSelectedSemester(sem)
                 setSelectedYear(year)
               }}
-              className="px-3 py-2 border rounded-md bg-background cursor-pointer"
+              className="px-3 py-2 border rounded-md bg-background cursor-pointer text-sm"
             >
               {availableSemesters.map((sem) => (
                 <option
@@ -477,11 +478,11 @@ export default function StaffSchedulePage() {
               type="text"
               value={weekRange.formatted}
               readOnly
-              className="px-3 py-2 border rounded-md bg-background w-72"
+              className="px-3 py-2 border rounded-md bg-background w-72 text-sm"
             />
           </div>
           <Button onClick={handlePrint} variant="outline" className="ml-auto">
-            <Printer className="w-4 h-4 mr-2" />
+            <Printer className="w-4 h-4 mr-2 text-sm" />
             Print
           </Button>
         </div>
@@ -523,8 +524,7 @@ export default function StaffSchedulePage() {
                     key={`left-${unit}`}
                     className="bg-muted p-2 text-center text-xs font-medium border"
                   >
-                    Period {unit} <br />
-                    {startTime} - {endTime}
+                    Period {unit} ({startTime} - {endTime})
                   </td>
                 )
 
@@ -551,13 +551,13 @@ export default function StaffSchedulePage() {
                         className="bg-yellow-500 dark:bg-yellow-700 text-white p-2 border align-top w-64"
                       >
                         <div className="flex flex-col w-fit">
-                          <span className="font-semibold text-sm">
+                          <span className="font-semibold text-xs">
                             {schedule.subject_name}
                           </span>
-                          <span className="text-sm mt-1">
+                          <span className="text-xs mt-1">
                             {schedule.room_name}
                           </span>
-                          <span className="text-sm mt-1">
+                          <span className="text-xs mt-1">
                             {formatTime(schedule.start_time)} -{' '}
                             {formatTime(schedule.end_time)}
                           </span>

@@ -16,13 +16,11 @@ export default function Footer() {
       <div className="container mx-auto px-4 flex flex-col">
         <div className="flex flex-row justify-between items-start text-left font-montserrat">
           <div>
-            <h3 className="text-base font-bold mb-2">
-              School Management System
-            </h3>
+            <h3 className="text-sm font-bold mb-2">School Management System</h3>
           </div>
           <div>
-            <h6 className="font-semibold mb-2">Quick Links</h6>
-            <div className="space-y-1 text-sm">
+            <h6 className="font-semibold mb-2 text-sm">Quick Links</h6>
+            <div className="space-y-1 text-xs">
               <Link
                 href="https://github.com/ITITIU21299/SchoolManagement"
                 target="_blank"
@@ -47,23 +45,23 @@ export default function Footer() {
             </div>
           </div>
           <div className="">
-            <h6 className="font-semibold mb-2">Contact</h6>
+            <h6 className="font-semibold mb-2 text-sm">Contact</h6>
             <div className="flex items-center space-x-2">
               <span>
                 <MdEmail />
               </span>
-              <p className="text-sm">schoolmanagementad@gmail.com</p>
+              <p className="text-xs">schoolmanagementad@gmail.com</p>
             </div>
             <div className="flex items-center space-x-2">
               <span>
                 <MdPhone />
               </span>
-              <p className="text-sm">0123456789</p>
+              <p className="text-xs">0123456789</p>
             </div>
           </div>
         </div>
         <hr className="mt-4 mb-2 opacity-25" />
-        <div className="mb-2 text-center text-sm font-montserrat">
+        <div className="mb-2 text-center text-xs font-montserrat">
           <p>&copy;2025 School Management System. All rights reserved.</p>
         </div>
       </div>
