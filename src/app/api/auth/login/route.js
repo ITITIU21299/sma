@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PasswordUtil } from "@/lib/password";
 import { UserService } from "@/services/UserService";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
+import { signJWT } from "@/lib/jwt";
 
 export async function POST(request) {
   try {
@@ -33,6 +34,11 @@ export async function POST(request) {
         role = "admin";
       }
 
+      const token = signJWT(
+        { username: username, role: role },
+        process.env.JWT_SECRET
+      );
+
       const response = NextResponse.json({
         success: true,
         user: {
@@ -41,20 +47,13 @@ export async function POST(request) {
         },
       });
 
-      // Set session cookie
-      response.cookies.set(
-        "user",
-        JSON.stringify({
-          username: username,
-          role: role,
-        }),
-        {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        }
-      );
+      // Set JWT cookie
+      response.cookies.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
 
       return response;
     }
@@ -136,7 +135,14 @@ export async function POST(request) {
 
       console.log("Login successful for:", username);
 
-      // Create session using cookie-based authentication
+      const token = signJWT(
+        {
+          username: user.getUsername(),
+          role: user.getRole(),
+        },
+        process.env.JWT_SECRET
+      );
+
       const response = NextResponse.json({
         success: true,
         user: {
@@ -145,20 +151,13 @@ export async function POST(request) {
         },
       });
 
-      // Set session cookie
-      response.cookies.set(
-        "user",
-        JSON.stringify({
-          username: user.getUsername(),
-          role: user.getRole(),
-        }),
-        {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        }
-      );
+      // Set JWT cookie
+      response.cookies.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
 
       return response;
     } catch (dbError) {
@@ -180,6 +179,14 @@ export async function POST(request) {
         role = "admin";
       }
 
+      const token = signJWT(
+        {
+          username: username,
+          role: role,
+        },
+        process.env.JWT_SECRET
+      );
+
       const response = NextResponse.json({
         success: true,
         user: {
@@ -188,19 +195,13 @@ export async function POST(request) {
         },
       });
 
-      response.cookies.set(
-        "user",
-        JSON.stringify({
-          username: username,
-          role: role,
-        }),
-        {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 7,
-        }
-      );
+      // Set JWT cookie
+      response.cookies.set("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+      });
 
       return response;
     }

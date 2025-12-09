@@ -2,23 +2,15 @@ import { NextResponse } from "next/server";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { StudentService } from "@/services/StudentService";
 import { handleApiError } from "@/lib/api-helpers";
+import { requireRole } from "@/lib/auth-guard";
 
 export async function POST(request) {
   try {
-    // Get session from cookie
-    const userCookie = request.cookies.get("user");
-    if (!userCookie) {
+    const { ok, user } = requireRole(request, "student");
+    if (!ok) {
       return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const user = JSON.parse(userCookie.value);
-    if (user.role !== "student") {
-      return NextResponse.json(
-        { error: "Forbidden" },
-        { status: 403 }
+        { error: user ? "Forbidden" : "Unauthorized" },
+        { status: user ? 403 : 401 }
       );
     }
 

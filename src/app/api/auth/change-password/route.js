@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { UserService } from "@/services/UserService";
+import { getUserFromRequest } from "@/lib/auth-guard";
 
 export async function POST(request) {
   try {
-    // Get session from cookie
-    const userCookie = request.cookies.get("user");
-    if (!userCookie) {
+    const user = getUserFromRequest(request);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const user = JSON.parse(userCookie.value);
     const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {

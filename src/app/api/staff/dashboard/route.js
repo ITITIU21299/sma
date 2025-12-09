@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { StaffService } from "@/services/StaffService";
 import { handleApiError } from "@/lib/api-helpers";
+import { requireRole } from "@/lib/auth-guard";
 
 /**
  * Determine current semester based on date.
@@ -30,15 +31,12 @@ function getCurrentSemester() {
 
 export async function GET(request) {
   try {
-    // Get session from cookie
-    const userCookie = request.cookies.get("user");
-    if (!userCookie) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const user = JSON.parse(userCookie.value);
-    if (user.role !== "staff") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const { ok, user } = requireRole(request, "staff");
+    if (!ok) {
+      return NextResponse.json(
+        { error: user ? "Forbidden" : "Unauthorized" },
+        { status: user ? 403 : 401 }
+      );
     }
 
     // Create Supabase client
