@@ -90,7 +90,7 @@ export default function Navbar({ userRole, userName }) {
 
   const adminNavItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/admin/assign-room', label: 'Assign Room', icon: ClipboardList },
+    //{ href: '/admin/assign-room', label: 'Assign Room', icon: ClipboardList },
     { href: '/admin/students', label: 'Students', icon: Users },
     { href: '/admin/staff', label: 'Staff', icon: Briefcase },
     { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
