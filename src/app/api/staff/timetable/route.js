@@ -3,6 +3,15 @@ import { createSupabaseScriptClient } from "@/lib/supabase/server";
 import { TimetableService } from "@/services/TimetableService";
 import { handleApiError } from "@/lib/api-helpers";
 
+function getSemesterStartDate(semester, year) {
+  const sem = semester?.toString().trim().toLowerCase();
+  const y = parseInt(year, 10) || new Date().getFullYear();
+  if (sem === "fall" || sem === "1") return new Date(y, 8, 1); // Sep 1
+  if (sem === "spring" || sem === "2") return new Date(y, 0, 1); // Jan 1
+  if (sem === "summer" || sem === "3") return new Date(y, 5, 1); // Jun 1
+  return new Date(y, 0, 1);
+}
+
 export async function GET(request) {
   try {
     // Get session from cookie
@@ -26,7 +35,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const semester = searchParams.get("semester") || "1";
     const year = searchParams.get("year") || new Date().getFullYear();
-    const week = searchParams.get("week") || "1";
+    const week = parseInt(searchParams.get("week") || "1", 10);
 
     // Create Supabase client
     const supabase = await createSupabaseScriptClient();
@@ -50,10 +59,21 @@ export async function GET(request) {
 
     // Get timetable data
     try {
+      const startDate = getSemesterStartDate(semester, year);
+      const weekStart = new Date(startDate);
+      weekStart.setDate(startDate.getDate() + (week - 1) * 7);
+      // Align to Monday of that week (day 1 = Monday)
+      const offsetToMonday = ((weekStart.getDay() + 6) % 7);
+      weekStart.setDate(weekStart.getDate() - offsetToMonday);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+
       const timetableData = await timetableService.getStaffTimetable(
         staffId,
         semester,
-        parseInt(year)
+        parseInt(year, 10),
+        weekStart,
+        weekEnd
       );
 
       return NextResponse.json({
@@ -61,7 +81,7 @@ export async function GET(request) {
         data: timetableData,
         semester,
         year: parseInt(year),
-        week: parseInt(week),
+        week,
       });
     } catch (error) {
       return handleApiError(error, "staff timetable");

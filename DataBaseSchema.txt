@@ -15,13 +15,22 @@ CREATE TABLE public.attendance (
 );
 CREATE TABLE public.backup_room_assignment (
   id bigint NOT NULL DEFAULT nextval('backup_room_assignment_id_seq'::regclass),
-  class_id uuid,
+  class_id uuid NOT NULL,
   room_id uuid,
-  assigned_at timestamp with time zone DEFAULT now(),
+  override_date date NOT NULL,
+  start_time time without time zone, -- optional per-date time change
+  end_time time without time zone,   -- optional per-date time change
+  staff_id uuid,                     -- optional substitute staff
+  action text NOT NULL DEFAULT 'room_change'::text CHECK (action = ANY (ARRAY['room_change','cancel','move'])),
+  note text,
+  created_at timestamp with time zone DEFAULT now(),
+  created_by uuid,                   -- admin user id if available
   CONSTRAINT backup_room_assignment_pkey PRIMARY KEY (id),
-  CONSTRAINT backup_room_assignment_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
-  CONSTRAINT backup_room_assignment_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+  CONSTRAINT backup_room_assignment_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id) ON DELETE CASCADE,
+  CONSTRAINT backup_room_assignment_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id),
+  CONSTRAINT backup_room_assignment_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES public.staff(id)
 );
+CREATE UNIQUE INDEX backup_room_assignment_class_date_idx ON public.backup_room_assignment (class_id, override_date);
 CREATE TABLE public.classes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   subject_id uuid,
@@ -50,6 +59,18 @@ CREATE TABLE public.exams (
   CONSTRAINT exams_pkey PRIMARY KEY (id),
   CONSTRAINT exams_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id)
 );
+CREATE TABLE public.feedback (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  student_id uuid,
+  category text NOT NULL CHECK (category = ANY (ARRAY['teacher'::text, 'class'::text, 'facility'::text, 'suggestion'::text, 'complaint'::text, 'other'::text])),
+  title text,
+  message text NOT NULL,
+  is_anonymous boolean DEFAULT false,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'in_review'::text, 'resolved'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT feedback_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.rooms (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   room_name text NOT NULL UNIQUE,
@@ -74,6 +95,7 @@ CREATE TABLE public.staff_salary (
   bonus numeric DEFAULT 0,
   month_year date NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
+  status boolean DEFAULT false,
   CONSTRAINT staff_salary_pkey PRIMARY KEY (id),
   CONSTRAINT staff_salary_staff_id_fkey FOREIGN KEY (staff_id) REFERENCES public.staff(id)
 );

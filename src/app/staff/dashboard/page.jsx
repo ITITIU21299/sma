@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, GraduationCap, Megaphone, Calendar } from 'lucide-react';
+import { Users, GraduationCap, Calendar, ClipboardList, DollarSign, Home } from 'lucide-react';
 import { ThreeDots } from 'react-loader-spinner';
+import Link from 'next/link';
 
 export default function StaffDashboard() {
   const [staff, setStaff] = useState(null);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
+  const [upcomingExams, setUpcomingExams] = useState([]);
+  const [latestSalary, setLatestSalary] = useState(null);
+  const [currentSemester, setCurrentSemester] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -20,6 +24,9 @@ export default function StaffDashboard() {
         setStaff({ name: data.staff?.full_name || 'Staff' });
         setTotalStudents(data.stats?.totalStudents || 0);
         setTotalClasses(data.stats?.totalClasses || 0);
+        setUpcomingExams(data.upcomingExams || []);
+        setLatestSalary(data.latestSalary);
+        setCurrentSemester(data.currentSemester);
       } else {
         console.error('Error fetching dashboard data:', data.error);
       }
@@ -34,9 +41,28 @@ export default function StaffDashboard() {
     fetchData();
   }, []);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const formatMonthYear = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+    });
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center h-screen">
         <ThreeDots
           visible={true}
           height="100"
@@ -53,79 +79,175 @@ export default function StaffDashboard() {
 
   return (
     <div className="space-y-6 font-roboto">
-      <h1 className="text-3xl font-bold">Welcome, {staff?.name || 'Staff'}</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Home className="w-8 h-8" />
+            Welcome, {staff?.name || 'Staff'}
+          </h1>
+          {currentSemester && (
+            <p className="text-muted-foreground mt-2">
+              {currentSemester.semester} {currentSemester.year} Semester
+            </p>
+          )}
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5" />
-              <span className="text-2xl">Students This Semester</span>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Students This Semester
             </CardTitle>
+            <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900">
+              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-primary">{totalStudents}</p>
+            <div className="text-3xl font-bold">{totalStudents}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total enrolled students</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <GraduationCap className="w-5 h-5" />
-              <span className="text-2xl">Classes This Semester</span>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Classes This Semester
             </CardTitle>
+            <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900">
+              <GraduationCap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-primary">{totalClasses}</p>
+            <div className="text-3xl font-bold">{totalClasses}</div>
+            <p className="text-xs text-muted-foreground mt-1">Classes you're teaching</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Upcoming Exams
+            </CardTitle>
+            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
+              <Calendar className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{upcomingExams.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Exams scheduled</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Latest Salary
+            </CardTitle>
+            <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900">
+              <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            {latestSalary ? (
+              <>
+                <div className="text-2xl font-bold">
+                  {latestSalary.status ? (
+                    <span className="text-green-600 dark:text-green-400">Paid</span>
+                  ) : (
+                    <span className="text-red-600 dark:text-red-400">Pending</span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatMonthYear(latestSalary.monthYear)}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-muted-foreground">N/A</div>
+                <p className="text-xs text-muted-foreground mt-1">No salary records</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+      {/* Upcoming Exams */}
+      {upcomingExams.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Megaphone className="w-5 h-5" />
-              <span className="text-2xl"> Recent Announcements</span>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5" />
+              Upcoming Exams
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-2 text-lg">
-              <li className="p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                Annual Sports Day on 15th July
-              </li>
-              <li className="p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                Parent-Teacher Meeting next Friday
-              </li>
-              <li className="p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                New Library Books Available
-              </li>
-            </ul>
+            <div className="space-y-3">
+              {upcomingExams.map((exam) => (
+                <div
+                  key={exam.id}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <p className="font-medium">{exam.className}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {exam.examType?.toUpperCase() || 'Exam'} • {formatDate(exam.examDate)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-medium">
+                      {formatDate(exam.examDate)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <Link href="/staff/schedule">
+                <button className="text-sm text-primary hover:underline">
+                  View full schedule →
+                </button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
+      )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5" />
-              <span className="text-2xl">Upcoming Events</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-lg">
-              <li className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-                Mid-term Exams: 20th-25th August
-              </li>
-              <li className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-                Science Fair: 5th September
-              </li>
-              <li className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer">
-                Career Counseling Session: 10th September
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/staff/schedule">
+              <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span className="font-medium">View Schedule</span>
+                </div>
+              </div>
+            </Link>
+            <Link href="/staff/salary">
+              <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <DollarSign className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Salary Information</span>
+                </div>
+              </div>
+            </Link>
+            <Link href="/staff/attendance">
+              <div className="p-4 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <Users className="w-5 h-5 text-primary" />
+                  <span className="font-medium">Mark Attendance</span>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

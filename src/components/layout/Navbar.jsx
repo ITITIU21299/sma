@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
   Home,
   Calendar,
@@ -13,51 +13,54 @@ import {
   MessageSquare,
   ClipboardList,
   Sun,
-} from 'lucide-react'
-import logo from '@/../public/logo.png'
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
+  Users,
+  Briefcase,
+  GraduationCap,
+} from 'lucide-react';
+import logo from '@/../public/logo.png';
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export default function Navbar({ userRole, userName }) {
-  const pathname = usePathname()
-  const router = useRouter()
+  const pathname = usePathname();
+  const router = useRouter();
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('darkMode') === 'true'
+      return localStorage.getItem('darkMode') === 'true';
     }
-    return false
-  })
+    return false;
+  });
 
   useEffect(() => {
     // Sync DOM with dark mode state
     if (darkMode) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('dark');
     }
-  }, [darkMode])
+  }, [darkMode]);
 
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode
-    setDarkMode(newDarkMode)
-    localStorage.setItem('darkMode', newDarkMode.toString())
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
     if (newDarkMode) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('dark');
     }
-  }
+  };
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      router.push('/login')
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('Logout error:', error);
     }
-  }
+  };
 
-  const isActive = (path) => pathname === path
+  const isActive = (path) => pathname === path;
 
   const studentNavItems = [
     { href: '/student/dashboard', label: 'Dashboard', icon: Home },
@@ -70,8 +73,8 @@ export default function Navbar({ userRole, userName }) {
     { href: '/student/schedule', label: 'Room Schedule', icon: Calendar },
     { href: '/student/attendance', label: 'Attendance', icon: CalendarCheck },
     { href: '/student/marks', label: 'Marks', icon: ClipboardList },
-    //{ href: "/student/feedback", label: "Feedback", icon: MessageSquare },
-  ]
+    { href: '/student/feedback', label: 'Feedback', icon: MessageSquare },
+  ];
 
   const staffNavItems = [
     { href: '/staff/dashboard', label: 'Dashboard', icon: Home },
@@ -83,11 +86,29 @@ export default function Navbar({ userRole, userName }) {
       icon: CalendarCheck,
     },
     //{ href: "/staff/assign-room", label: "Assign Room", icon: ClipboardList },
-  ]
+  ];
 
-  const navItems = userRole === 'student' ? studentNavItems : staffNavItems
+  const adminNavItems = [
+    { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
+    { href: '/admin/assign-room', label: 'Assign Room', icon: ClipboardList },
+    { href: '/admin/students', label: 'Students', icon: Users },
+    { href: '/admin/staff', label: 'Staff', icon: Briefcase },
+    { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
+    { href: '/admin/feedback', label: 'Feedback', icon: MessageSquare },
+  ];
+
+  const navItems =
+    userRole === 'student'
+      ? studentNavItems
+      : userRole === 'admin'
+      ? adminNavItems
+      : staffNavItems;
   const profilePath =
-    userRole === 'student' ? '/student/profile' : '/staff/profile'
+    userRole === 'student'
+      ? '/student/profile'
+      : userRole === 'admin'
+      ? '/admin/profile'
+      : '/staff/profile';
 
   return (
     <nav className="bg-primary text-primary-foreground shadow-lg">
@@ -105,6 +126,8 @@ export default function Navbar({ userRole, userName }) {
               href={
                 userRole === 'student'
                   ? '/student/dashboard'
+                  : userRole === 'admin'
+                  ? '/admin/dashboard'
                   : '/staff/dashboard'
               }
               className="text-xl font-bold font-montserrat"
@@ -115,7 +138,7 @@ export default function Navbar({ userRole, userName }) {
           <div className="flex items-center space-x-4 font-medium">
             <div className="hidden lg:flex items-center space-x-2">
               {navItems.map((item) => {
-                const Icon = item.icon
+                const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
@@ -129,7 +152,7 @@ export default function Navbar({ userRole, userName }) {
                     <Icon className="w-4 h-4" />
                     <span className="font-montserrat">{item.label}</span>
                   </Link>
-                )
+                );
               })}
             </div>
 
@@ -185,5 +208,5 @@ export default function Navbar({ userRole, userName }) {
         </div>
       </div>
     </nav>
-  )
+  );
 }

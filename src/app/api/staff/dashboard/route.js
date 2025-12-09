@@ -70,11 +70,67 @@ export async function GET(request) {
         currentSemester.year
       );
 
+      // Get upcoming exams for staff's classes
+      const { data: classesData } = await supabase
+        .from("classes")
+        .select("id")
+        .eq("staff_id", staffId)
+        .eq("semester", currentSemester.semester)
+        .eq("year", currentSemester.year);
+
+      let upcomingExams = [];
+      if (classesData && classesData.length > 0) {
+        const classIds = classesData.map((c) => c.id);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const { data: examsData } = await supabase
+          .from("exams")
+          .select(`
+            id,
+            exam_type,
+            exam_date,
+            classes:class_id (
+              id,
+              class_name
+            )
+          `)
+          .in("class_id", classIds)
+          .gte("exam_date", today.toISOString().split("T")[0])
+          .order("exam_date", { ascending: true })
+          .limit(5);
+
+        if (examsData) {
+          upcomingExams = examsData.map((exam) => ({
+            id: exam.id,
+            examType: exam.exam_type,
+            examDate: exam.exam_date,
+            className: exam.classes?.class_name || "Unknown",
+          }));
+        }
+      }
+
+      // Get recent salary status
+      const { data: salaryData } = await supabase
+        .from("staff_salary")
+        .select("id, month_year, status, base_salary")
+        .eq("staff_id", staffId)
+        .order("month_year", { ascending: false })
+        .limit(1);
+
+      const latestSalary = salaryData && salaryData.length > 0 ? {
+        monthYear: salaryData[0].month_year,
+        status: salaryData[0].status,
+        baseSalary: salaryData[0].base_salary,
+      } : null;
+
       return NextResponse.json({
         success: true,
         staff: staffProfile,
         stats,
         currentSemester,
+        upcomingExams,
+        latestSalary,
       });
     } catch (error) {
       return handleApiError(error, "staff dashboard stats");

@@ -258,7 +258,8 @@ export class StudentService {
    * @param {number} year - Academic year (e.g., 2025)
    * @returns {Promise<Array>} Array of timetable entries
    */
-  async getStudentTimetable(studentId, semester, year) {
+  async getStudentTimetable(studentId, semester, year, weekStart = null, weekEnd = null) {
+    const semesterAliases = this.getSemesterAliases(semester);
     // First get classes the student is enrolled in for this semester and year
     const { data: enrollmentsData, error: enrollmentsError } =
       await this.supabase
@@ -288,7 +289,8 @@ export class StudentService {
     const relevantClassIds = enrollmentsData
       .filter(
         (e) =>
-          e.classes?.semester === semester && e.classes?.year === parseInt(year)
+          e.classes?.year === parseInt(year) &&
+          semesterAliases.includes(e.classes?.semester)
       )
       .map((e) => e.class_id);
 
@@ -333,21 +335,115 @@ export class StudentService {
       throw error;
     }
 
-    // Transform the data to a simpler format
-    return (data || []).map((entry) => ({
-      id: entry.id,
-      class_id: entry.class_id,
-      day_of_week: entry.day_of_week,
-      start_time: entry.start_time,
-      end_time: entry.end_time,
-      subject_name: entry.classes?.subjects?.name || "Unknown Subject",
-      subject_code: entry.classes?.subjects?.code || "",
-      class_name: entry.classes?.class_name || "",
-      room_id: entry.room_id,
-      room_name: entry.rooms?.room_name || "TBA",
-      semester: entry.classes?.semester || semester,
-      year: entry.classes?.year || year,
-    }));
+    if (!weekStart || !weekEnd) {
+      return (data || []).map((entry) => ({
+        id: entry.id,
+        class_id: entry.class_id,
+        day_of_week: entry.day_of_week,
+        start_time: entry.start_time,
+        end_time: entry.end_time,
+        subject_name: entry.classes?.subjects?.name || "Unknown Subject",
+        subject_code: entry.classes?.subjects?.code || "",
+        class_name: entry.classes?.class_name || "",
+        room_id: entry.room_id,
+        room_name: entry.rooms?.room_name || "TBA",
+        semester: entry.classes?.semester || semester,
+        year: entry.classes?.year || year,
+      }));
+    }
+
+    const startStr = weekStart.toISOString().split("T")[0];
+    const endStr = weekEnd.toISOString().split("T")[0];
+
+    const { data: overrides } = await this.supabase
+      .from("backup_room_assignment")
+      .select(
+        `
+        class_id,
+        room_id,
+        override_date,
+        start_time,
+        end_time,
+        action,
+        rooms:room_id (room_name)
+      `
+      )
+      .in("class_id", relevantClassIds)
+      .gte("override_date", startStr)
+      .lte("override_date", endStr);
+
+    const overridesMap =
+      overrides?.reduce((acc, o) => {
+        const key = `${o.class_id}-${o.override_date}`;
+        acc[key] = o;
+        return acc;
+      }, {}) || {};
+
+    const { data: exams } = await this.supabase
+      .from("exams")
+      .select("class_id, exam_date")
+      .in("class_id", relevantClassIds)
+      .gte("exam_date", startStr)
+      .lte("exam_date", endStr);
+
+    const examSet = new Set((exams || []).map((e) => `${e.class_id}-${e.exam_date}`));
+
+    const results = [];
+    for (const entry of data || []) {
+      const dateForEntry = new Date(weekStart);
+      dateForEntry.setDate(weekStart.getDate() + (entry.day_of_week - 1));
+      const dateStr = dateForEntry.toISOString().split("T")[0];
+
+      if (examSet.has(`${entry.class_id}-${dateStr}`)) continue;
+
+      const ov = overridesMap[`${entry.class_id}-${dateStr}`];
+      if (ov) {
+        if (ov.action === "cancel") continue;
+        results.push({
+          id: entry.id,
+          class_id: entry.class_id,
+          day_of_week: entry.day_of_week,
+          start_time: ov.start_time || entry.start_time,
+          end_time: ov.end_time || entry.end_time,
+          subject_name: entry.classes?.subjects?.name || "Unknown Subject",
+          subject_code: entry.classes?.subjects?.code || "",
+          class_name: entry.classes?.class_name || "",
+          room_id: ov.room_id || entry.room_id,
+          room_name: ov.rooms?.room_name || entry.rooms?.room_name || "TBA",
+          semester: entry.classes?.semester || semester,
+          year: entry.classes?.year || year,
+          override_date: dateStr,
+          override_action: ov.action,
+        });
+      } else {
+        results.push({
+          id: entry.id,
+          class_id: entry.class_id,
+          day_of_week: entry.day_of_week,
+          start_time: entry.start_time,
+          end_time: entry.end_time,
+          subject_name: entry.classes?.subjects?.name || "Unknown Subject",
+          subject_code: entry.classes?.subjects?.code || "",
+          class_name: entry.classes?.class_name || "",
+          room_id: entry.room_id,
+          room_name: entry.rooms?.room_name || "TBA",
+          semester: entry.classes?.semester || semester,
+          year: entry.classes?.year || year,
+          override_date: dateStr,
+        });
+      }
+    }
+
+    return results;
+  }
+
+  getSemesterAliases(semester) {
+    if (!semester) return [];
+    const s = semester.toString().trim().toLowerCase();
+    if (s === "fall" || s === "1") return ["Fall", "fall", "1"];
+    if (s === "spring" || s === "2") return ["Spring", "spring", "2"];
+    if (s === "summer" || s === "3") return ["Summer", "summer", "3"];
+    return [semester];
   }
 
   /**
@@ -765,5 +861,46 @@ export class StudentService {
       semester: exam.classes?.semester || "",
       year: exam.classes?.year || "",
     }));
+  }
+
+  /**
+   * Submit feedback
+   * @param {string} studentId - Student UUID
+   * @param {string} category - Feedback category (teacher, class, facility, suggestion, complaint, other)
+   * @param {string} title - Feedback title (optional)
+   * @param {string} message - Feedback message (required)
+   * @param {boolean} isAnonymous - Whether feedback is anonymous
+   * @returns {Promise<Object>} Created feedback record
+   */
+  async submitFeedback(studentId, category, title, message, isAnonymous = false) {
+    // Validate category
+    const validCategories = ['teacher', 'class', 'facility', 'suggestion', 'complaint', 'other'];
+    if (!validCategories.includes(category)) {
+      throw new Error(`Invalid category. Must be one of: ${validCategories.join(', ')}`);
+    }
+
+    if (!message || message.trim() === '') {
+      throw new Error('Message is required');
+    }
+
+    const { data, error } = await this.supabase
+      .from('feedback')
+      .insert({
+        student_id: studentId,
+        category: category,
+        title: title || null,
+        message: message.trim(),
+        is_anonymous: isAnonymous,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error submitting feedback:', error);
+      throw error;
+    }
+
+    return data;
   }
 }

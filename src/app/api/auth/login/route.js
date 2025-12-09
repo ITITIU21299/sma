@@ -26,6 +26,11 @@ export async function POST(request) {
         username.toLowerCase().startsWith("stu")
       ) {
         role = "student";
+      } else if (
+        username.toLowerCase().startsWith("admin") ||
+        username.toLowerCase().startsWith("adm")
+      ) {
+        role = "admin";
       }
 
       const response = NextResponse.json({
@@ -168,6 +173,11 @@ export async function POST(request) {
         username.toLowerCase().startsWith("stu")
       ) {
         role = "student";
+      } else if (
+        username.toLowerCase().startsWith("admin") ||
+        username.toLowerCase().startsWith("adm")
+      ) {
+        role = "admin";
       }
 
       const response = NextResponse.json({
