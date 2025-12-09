@@ -15,6 +15,8 @@ import {
   User,
   Building2,
   Phone,
+  Save,
+  KeyRound,
 } from 'lucide-react';
 
 export default function AdminStaffPage() {
@@ -28,6 +30,9 @@ export default function AdminStaffPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [staffDetails, setStaffDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [editStaff, setEditStaff] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchStaff();
@@ -79,6 +84,13 @@ export default function AdminStaffPage() {
 
       if (data.success) {
         setStaffDetails(data.data);
+        setEditStaff({
+          fullName: data.data.fullName || '',
+          staffId: data.data.staffId || '',
+          department: data.data.department || '',
+          phone: data.data.phone || '',
+          hireDate: data.data.hireDate ? data.data.hireDate.split('T')[0] : '',
+        });
       } else {
         console.error('Error fetching staff details:', data.error);
       }
@@ -103,6 +115,53 @@ export default function AdminStaffPage() {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleStaffSave = async () => {
+    if (!staffDetails?.userId) {
+      alert('Missing user id for this staff');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        userId: staffDetails.userId,
+        role: 'staff',
+        updates: {
+          fullName: editStaff?.fullName || '',
+          staffCode: editStaff?.staffId || '',
+          department: editStaff?.department || '',
+          phone: editStaff?.phone || '',
+          dateOfBirth: null,
+        },
+      };
+      if (editStaff?.hireDate) {
+        payload.updates.hireDate = editStaff.hireDate;
+      }
+      if (newPassword) {
+        payload.newPassword = newPassword;
+      }
+
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'Update failed');
+        return;
+      }
+      await fetchStaffDetails(staffDetails.id);
+      await fetchStaff();
+      alert('Staff updated successfully');
+      setNewPassword('');
+    } catch (err) {
+      console.error(err);
+      alert('Unexpected error while updating staff');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -238,32 +297,83 @@ export default function AdminStaffPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-muted-foreground">Full Name</Label>
-                        <p className="font-medium">{staffDetails.fullName}</p>
+                        <Input
+                          value={editStaff?.fullName || ''}
+                          onChange={(e) =>
+                            setEditStaff((prev) => ({ ...prev, fullName: e.target.value }))
+                          }
+                        />
                       </div>
                       <div>
                         <Label className="text-muted-foreground">Staff ID</Label>
-                        <p className="font-medium">{staffDetails.staffId || 'N/A'}</p>
+                        <Input
+                          value={editStaff?.staffId || ''}
+                          onChange={(e) =>
+                            setEditStaff((prev) => ({ ...prev, staffId: e.target.value }))
+                          }
+                        />
                       </div>
                       <div>
                         <Label className="text-muted-foreground flex items-center gap-1">
                           <Building2 className="w-4 h-4" />
                           Department
                         </Label>
-                        <p className="font-medium">{staffDetails.department || 'N/A'}</p>
+                        <Input
+                          value={editStaff?.department || ''}
+                          onChange={(e) =>
+                            setEditStaff((prev) => ({ ...prev, department: e.target.value }))
+                          }
+                        />
                       </div>
                       <div>
                         <Label className="text-muted-foreground flex items-center gap-1">
                           <Phone className="w-4 h-4" />
                           Phone
                         </Label>
-                        <p className="font-medium">{staffDetails.phone || 'N/A'}</p>
+                        <Input
+                          value={editStaff?.phone || ''}
+                          onChange={(e) =>
+                            setEditStaff((prev) => ({ ...prev, phone: e.target.value }))
+                          }
+                        />
                       </div>
                       <div>
                         <Label className="text-muted-foreground flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
                           Hire Date
                         </Label>
-                        <p className="font-medium">{formatDate(staffDetails.hireDate)}</p>
+                        <Input
+                          type="date"
+                          value={editStaff?.hireDate || ''}
+                          onChange={(e) =>
+                            setEditStaff((prev) => ({ ...prev, hireDate: e.target.value }))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-muted-foreground flex items-center gap-2">
+                          <KeyRound className="w-4 h-4" />
+                          New Password (optional)
+                        </Label>
+                        <Input
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter to reset password"
+                        />
+                      </div>
+                      <div className="flex items-end gap-3">
+                        <Button
+                          onClick={handleStaffSave}
+                          disabled={saving}
+                          className="flex items-center gap-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          {saving ? 'Saving...' : 'Save changes'}
+                        </Button>
                       </div>
                     </div>
                   </div>

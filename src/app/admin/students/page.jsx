@@ -14,6 +14,8 @@ import {
   DollarSign,
   ClipboardList,
   User,
+  Save,
+  KeyRound,
 } from 'lucide-react';
 
 export default function AdminStudentsPage() {
@@ -26,6 +28,9 @@ export default function AdminStudentsPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [studentDetails, setStudentDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [editStudent, setEditStudent] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const classLevels = ['all', 'Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate'];
 
@@ -71,6 +76,14 @@ export default function AdminStudentsPage() {
 
       if (data.success) {
         setStudentDetails(data.data);
+        setEditStudent({
+          fullName: data.data.fullName || '',
+          studentId: data.data.studentId || '',
+          classLevel: data.data.classLevel || '',
+          dateOfBirth: data.data.dateOfBirth
+            ? data.data.dateOfBirth.split('T')[0]
+            : '',
+        });
       } else {
         console.error('Error fetching student details:', data.error);
       }
@@ -95,6 +108,50 @@ export default function AdminStudentsPage() {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleStudentSave = async () => {
+    if (!studentDetails?.userId) {
+      alert('Missing user id for this student');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        userId: studentDetails.userId,
+        role: 'student',
+        updates: {
+          fullName: editStudent?.fullName || '',
+          studentCode: editStudent?.studentId || '',
+          classLevel: editStudent?.classLevel || '',
+          dateOfBirth: editStudent?.dateOfBirth || null,
+        },
+      };
+      if (newPassword) {
+        payload.newPassword = newPassword;
+      }
+
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.error || 'Update failed');
+        return;
+      }
+      // Refresh details and list
+      await fetchStudentDetails(studentDetails.id);
+      await fetchStudents();
+      alert('Student updated successfully');
+      setNewPassword('');
+    } catch (err) {
+      console.error(err);
+      alert('Unexpected error while updating student');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -227,24 +284,70 @@ export default function AdminStudentsPage() {
                       <User className="w-5 h-5" />
                       Basic Information
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-muted-foreground">Full Name</Label>
-                        <p className="font-medium">{studentDetails.fullName}</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Student ID</Label>
-                        <p className="font-medium">{studentDetails.studentId || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Class Level</Label>
-                        <p className="font-medium">{studentDetails.classLevel || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <Label className="text-muted-foreground">Date of Birth</Label>
-                        <p className="font-medium">{formatDate(studentDetails.dateOfBirth)}</p>
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Full Name</Label>
+                      <Input
+                        value={editStudent?.fullName || ''}
+                        onChange={(e) =>
+                          setEditStudent((prev) => ({ ...prev, fullName: e.target.value }))
+                        }
+                      />
                     </div>
+                    <div>
+                      <Label className="text-muted-foreground">Student ID</Label>
+                      <Input
+                        value={editStudent?.studentId || ''}
+                        onChange={(e) =>
+                          setEditStudent((prev) => ({ ...prev, studentId: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Class Level</Label>
+                      <Input
+                        value={editStudent?.classLevel || ''}
+                        onChange={(e) =>
+                          setEditStudent((prev) => ({ ...prev, classLevel: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Date of Birth</Label>
+                      <Input
+                        type="date"
+                        value={editStudent?.dateOfBirth || ''}
+                        onChange={(e) =>
+                          setEditStudent((prev) => ({ ...prev, dateOfBirth: e.target.value }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground flex items-center gap-2">
+                        <KeyRound className="w-4 h-4" />
+                        New Password (optional)
+                      </Label>
+                      <Input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter to reset password"
+                      />
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <Button
+                        onClick={handleStudentSave}
+                        disabled={saving}
+                        className="flex items-center gap-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        {saving ? 'Saving...' : 'Save changes'}
+                      </Button>
+                    </div>
+                  </div>
                   </div>
 
                   {/* Enrollments */}

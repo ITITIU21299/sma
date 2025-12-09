@@ -2,6 +2,7 @@
  * Admin Service - OOP approach for data access using Supabase
  */
 import { retrySupabaseQuery } from "@/lib/retry";
+import { PasswordUtil } from "@/lib/password";
 
 export class AdminService {
   constructor(supabaseClient) {
@@ -17,7 +18,8 @@ export class AdminService {
   async getAllFeedback(category = null, status = null) {
     let query = this.supabase
       .from("feedback")
-      .select(`
+      .select(
+        `
         id,
         student_id,
         category,
@@ -28,7 +30,8 @@ export class AdminService {
         priority,
         created_at,
         updated_at
-      `)
+      `
+      )
       .order("created_at", { ascending: false });
 
     if (category && category !== "all") {
@@ -102,7 +105,9 @@ export class AdminService {
   async updateFeedbackPriority(feedbackId, priority) {
     const validPriorities = ["high", "medium", "low"];
     if (!validPriorities.includes(priority)) {
-      throw new Error(`Invalid priority. Must be one of: ${validPriorities.join(", ")}`);
+      throw new Error(
+        `Invalid priority. Must be one of: ${validPriorities.join(", ")}`
+      );
     }
 
     const { data, error } = await this.supabase
@@ -132,7 +137,9 @@ export class AdminService {
   async updateFeedbackStatus(feedbackId, status) {
     const validStatuses = ["pending", "in_review", "resolved"];
     if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid status. Must be one of: ${validStatuses.join(", ")}`);
+      throw new Error(
+        `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+      );
     }
 
     const { data, error } = await this.supabase
@@ -161,7 +168,8 @@ export class AdminService {
   async getFeedbackById(feedbackId) {
     const { data, error } = await this.supabase
       .from("feedback")
-      .select(`
+      .select(
+        `
         id,
         student_id,
         category,
@@ -172,7 +180,8 @@ export class AdminService {
         priority,
         created_at,
         updated_at
-      `)
+      `
+      )
       .eq("id", feedbackId)
       .single();
 
@@ -314,7 +323,9 @@ export class AdminService {
   async getAllStudents(searchQuery = null, classLevel = null) {
     let query = this.supabase
       .from("students")
-      .select("id, full_name, date_of_birth, class_level, student_id, created_at")
+      .select(
+        "id, full_name, date_of_birth, class_level, student_id, created_at"
+      )
       .order("full_name", { ascending: true });
 
     if (searchQuery) {
@@ -353,7 +364,9 @@ export class AdminService {
     // Get student basic info
     const { data: student, error: studentError } = await this.supabase
       .from("students")
-      .select("id, full_name, date_of_birth, class_level, student_id, created_at")
+      .select(
+        "id, user_id, full_name, date_of_birth, class_level, student_id, created_at"
+      )
       .eq("id", studentId)
       .single();
 
@@ -378,14 +391,16 @@ export class AdminService {
       const classIds = enrollments.map((e) => e.class_id);
       const { data: classesData, error: classesError } = await this.supabase
         .from("classes")
-        .select(`
+        .select(
+          `
           id,
           class_name,
           semester,
           year,
           subjects:subject_id (code, name),
           staff:staff_id (full_name, staff_id)
-        `)
+        `
+        )
         .in("id", classIds);
 
       if (!classesError && classesData) {
@@ -394,8 +409,12 @@ export class AdminService {
           className: c.class_name,
           semester: c.semester,
           year: c.year,
-          subject: c.subjects ? { code: c.subjects.code, name: c.subjects.name } : null,
-          staff: c.staff ? { fullName: c.staff.full_name, staffId: c.staff.staff_id } : null,
+          subject: c.subjects
+            ? { code: c.subjects.code, name: c.subjects.name }
+            : null,
+          staff: c.staff
+            ? { fullName: c.staff.full_name, staffId: c.staff.staff_id }
+            : null,
         }));
       }
     }
@@ -426,7 +445,8 @@ export class AdminService {
     // Get exam scores
     const { data: scores, error: scoresError } = await this.supabase
       .from("student_scores")
-      .select(`
+      .select(
+        `
         id,
         score,
         exams:exam_id (
@@ -440,14 +460,19 @@ export class AdminService {
             year
           )
         )
-      `)
+      `
+      )
       .eq("student_id", studentId);
-    
+
     // Sort scores by exam date manually since nested order doesn't work
     if (scores && !scoresError) {
       scores.sort((a, b) => {
-        const dateA = a.exams?.exam_date ? new Date(a.exams.exam_date) : new Date(0);
-        const dateB = b.exams?.exam_date ? new Date(b.exams.exam_date) : new Date(0);
+        const dateA = a.exams?.exam_date
+          ? new Date(a.exams.exam_date)
+          : new Date(0);
+        const dateB = b.exams?.exam_date
+          ? new Date(b.exams.exam_date)
+          : new Date(0);
         return dateB - dateA;
       });
     }
@@ -458,6 +483,7 @@ export class AdminService {
 
     return {
       id: student.id,
+      userId: student.user_id,
       fullName: student.full_name,
       dateOfBirth: student.date_of_birth,
       classLevel: student.class_level,
@@ -479,7 +505,9 @@ export class AdminService {
   async getAllStaff(searchQuery = null, department = null) {
     let query = this.supabase
       .from("staff")
-      .select("id, full_name, department, phone, hire_date, staff_id, created_at")
+      .select(
+        "id, full_name, department, phone, hire_date, staff_id, created_at"
+      )
       .order("full_name", { ascending: true });
 
     if (searchQuery) {
@@ -519,7 +547,9 @@ export class AdminService {
     // Get staff basic info
     const { data: staff, error: staffError } = await this.supabase
       .from("staff")
-      .select("id, full_name, department, phone, hire_date, staff_id, created_at")
+      .select(
+        "id, user_id, full_name, department, phone, hire_date, staff_id, created_at"
+      )
       .eq("id", staffId)
       .single();
 
@@ -531,13 +561,15 @@ export class AdminService {
     // Get classes taught
     const { data: classes, error: classesError } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         id,
         class_name,
         semester,
         year,
         subjects:subject_id (code, name)
-      `)
+      `
+      )
       .eq("staff_id", staffId)
       .order("year", { ascending: false })
       .order("semester", { ascending: true });
@@ -559,6 +591,7 @@ export class AdminService {
 
     return {
       id: staff.id,
+      userId: staff.user_id,
       fullName: staff.full_name,
       department: staff.department,
       phone: staff.phone,
@@ -580,7 +613,8 @@ export class AdminService {
   async getAllClasses(searchQuery = null, semester = null, year = null) {
     let query = this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         id,
         class_name,
         semester,
@@ -588,7 +622,8 @@ export class AdminService {
         created_at,
         subjects:subject_id (code, name),
         staff:staff_id (full_name, staff_id, department)
-      `)
+      `
+      )
       .order("year", { ascending: false })
       .order("semester", { ascending: true })
       .order("class_name", { ascending: true });
@@ -631,12 +666,16 @@ export class AdminService {
           semester: cls.semester,
           year: cls.year,
           createdAt: cls.created_at,
-          subject: cls.subjects ? { code: cls.subjects.code, name: cls.subjects.name } : null,
-          staff: cls.staff ? {
-            fullName: cls.staff.full_name,
-            staffId: cls.staff.staff_id,
-            department: cls.staff.department,
-          } : null,
+          subject: cls.subjects
+            ? { code: cls.subjects.code, name: cls.subjects.name }
+            : null,
+          staff: cls.staff
+            ? {
+                fullName: cls.staff.full_name,
+                staffId: cls.staff.staff_id,
+                department: cls.staff.department,
+              }
+            : null,
           enrollmentCount: count || 0,
         };
       })
@@ -654,7 +693,8 @@ export class AdminService {
     // Get class basic info
     const { data: classData, error: classError } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         id,
         class_name,
         semester,
@@ -662,7 +702,8 @@ export class AdminService {
         created_at,
         subjects:subject_id (id, code, name),
         staff:staff_id (id, full_name, staff_id, department, phone)
-      `)
+      `
+      )
       .eq("id", classId)
       .single();
 
@@ -674,10 +715,12 @@ export class AdminService {
     // Get enrollments
     const { data: enrollments, error: enrollmentsError } = await this.supabase
       .from("enrollments")
-      .select(`
+      .select(
+        `
         id,
         students:student_id (id, full_name, student_id, class_level)
-      `)
+      `
+      )
       .eq("class_id", classId);
 
     if (enrollmentsError) {
@@ -687,14 +730,16 @@ export class AdminService {
     // Get timetable
     const { data: timetable, error: timetableError } = await this.supabase
       .from("timetable")
-      .select(`
+      .select(
+        `
         id,
         day_of_week,
         start_time,
         end_time,
         rooms:room_id (id, room_name),
         staff:staff_id (id, full_name, staff_id)
-      `)
+      `
+      )
       .eq("class_id", classId)
       .order("day_of_week", { ascending: true })
       .order("start_time", { ascending: true });
@@ -732,26 +777,32 @@ export class AdminService {
       semester: classData.semester,
       year: classData.year,
       createdAt: classData.created_at,
-      subject: classData.subjects ? {
-        id: classData.subjects.id,
-        code: classData.subjects.code,
-        name: classData.subjects.name,
-      } : null,
-      staff: classData.staff ? {
-        id: classData.staff.id,
-        fullName: classData.staff.full_name,
-        staffId: classData.staff.staff_id,
-        department: classData.staff.department,
-        phone: classData.staff.phone,
-      } : null,
+      subject: classData.subjects
+        ? {
+            id: classData.subjects.id,
+            code: classData.subjects.code,
+            name: classData.subjects.name,
+          }
+        : null,
+      staff: classData.staff
+        ? {
+            id: classData.staff.id,
+            fullName: classData.staff.full_name,
+            staffId: classData.staff.staff_id,
+            department: classData.staff.department,
+            phone: classData.staff.phone,
+          }
+        : null,
       enrollments: (enrollments || []).map((e) => ({
         id: e.id,
-        student: e.students ? {
-          id: e.students.id,
-          fullName: e.students.full_name,
-          studentId: e.students.student_id,
-          classLevel: e.students.class_level,
-        } : null,
+        student: e.students
+          ? {
+              id: e.students.id,
+              fullName: e.students.full_name,
+              studentId: e.students.student_id,
+              classLevel: e.students.class_level,
+            }
+          : null,
       })),
       timetable: timetable || [],
       exams: exams || [],
@@ -816,10 +867,19 @@ export class AdminService {
    * Considers timetable (weekly) and backup_room_assignment overrides.
    * @returns {Promise<{available: boolean, conflicts: Array}>}
    */
-  async checkRoomAvailability(classId, roomId, overrideDate, startTime, endTime) {
+  async checkRoomAvailability(
+    classId,
+    roomId,
+    overrideDate,
+    startTime,
+    endTime
+  ) {
     const conflicts = [];
     if (!roomId || !overrideDate || !startTime || !endTime) {
-      return { available: false, conflicts: [{ reason: "Missing parameters" }] };
+      return {
+        available: false,
+        conflicts: [{ reason: "Missing parameters" }],
+      };
     }
 
     const dateObj = new Date(overrideDate);
@@ -833,11 +893,16 @@ export class AdminService {
       .eq("day_of_week", dayOfWeek);
 
     if (timetableError) {
-      console.error("Error fetching timetable for availability:", timetableError);
+      console.error(
+        "Error fetching timetable for availability:",
+        timetableError
+      );
     }
 
     const candidateClassIds = (timetableSlots || [])
-      .filter((t) => this.timesOverlap(t.start_time, t.end_time, startTime, endTime))
+      .filter((t) =>
+        this.timesOverlap(t.start_time, t.end_time, startTime, endTime)
+      )
       .map((t) => t.class_id)
       .filter((cid) => cid !== classId);
 
@@ -860,7 +925,10 @@ export class AdminService {
     // Resolve timetable conflicts
     for (const slot of timetableSlots || []) {
       if (slot.class_id === classId) continue;
-      if (!this.timesOverlap(slot.start_time, slot.end_time, startTime, endTime)) continue;
+      if (
+        !this.timesOverlap(slot.start_time, slot.end_time, startTime, endTime)
+      )
+        continue;
 
       const ov = overridesByClass[slot.class_id];
       if (ov) {
@@ -882,11 +950,12 @@ export class AdminService {
     }
 
     // 3) Direct overrides already in the target room for that date
-    const { data: roomOverrides, error: roomOverridesError } = await this.supabase
-      .from("backup_room_assignment")
-      .select("class_id, room_id, action, start_time, end_time")
-      .eq("override_date", overrideDate)
-      .eq("room_id", roomId);
+    const { data: roomOverrides, error: roomOverridesError } =
+      await this.supabase
+        .from("backup_room_assignment")
+        .select("class_id, room_id, action, start_time, end_time")
+        .eq("override_date", overrideDate)
+        .eq("room_id", roomId);
 
     if (roomOverridesError) {
       console.error("Error fetching room overrides:", roomOverridesError);
@@ -908,7 +977,9 @@ export class AdminService {
     }
 
     // Enrich conflicts with class names
-    const conflictClassIds = [...new Set(conflicts.map((c) => c.classId).filter(Boolean))];
+    const conflictClassIds = [
+      ...new Set(conflicts.map((c) => c.classId).filter(Boolean)),
+    ];
     let classMap = {};
     if (conflictClassIds.length > 0) {
       const { data: classData } = await this.supabase
@@ -927,7 +998,10 @@ export class AdminService {
       className: classMap[c.classId] || "Unknown class",
     }));
 
-    return { available: conflictsDetailed.length === 0, conflicts: conflictsDetailed };
+    return {
+      available: conflictsDetailed.length === 0,
+      conflicts: conflictsDetailed,
+    };
   }
 
   /**
@@ -969,5 +1043,86 @@ export class AdminService {
 
     return data;
   }
-}
 
+  /**
+   * Update a student/staff profile fields (admin only).
+   * @param {string} userId - UUID of the user (users.id mapped to students.user_id / staff.user_id)
+   * @param {"student"|"staff"} role - Role to update
+   * @param {object} updates - Allowed fields: fullName, phone, department, classLevel, dateOfBirth, studentCode, staffCode
+   * @returns {Promise<object>} Updated record from the role table
+   */
+  async updateUserProfile(userId, role, updates = {}) {
+    if (!userId) throw new Error("userId is required");
+    if (!role || (role !== "student" && role !== "staff")) {
+      throw new Error("role must be 'student' or 'staff'");
+    }
+
+    let table = "";
+    let payload = {};
+
+    if (role === "student") {
+      table = "students";
+      if (updates.fullName !== undefined) payload.full_name = updates.fullName;
+      if (updates.classLevel !== undefined)
+        payload.class_level = updates.classLevel;
+      if (updates.dateOfBirth !== undefined)
+        payload.date_of_birth = updates.dateOfBirth;
+      if (updates.studentCode !== undefined)
+        payload.student_id = updates.studentCode;
+      if (updates.phone !== undefined) payload.phone = updates.phone;
+    } else if (role === "staff") {
+      table = "staff";
+      if (updates.fullName !== undefined) payload.full_name = updates.fullName;
+      if (updates.department !== undefined)
+        payload.department = updates.department;
+      if (updates.phone !== undefined) payload.phone = updates.phone;
+      if (updates.hireDate !== undefined) payload.hire_date = updates.hireDate;
+      if (updates.staffCode !== undefined) payload.staff_id = updates.staffCode;
+    }
+
+    if (!table || Object.keys(payload).length === 0) {
+      throw new Error("No valid fields to update");
+    }
+
+    const { data, error } = await this.supabase
+      .from(table)
+      .update(payload)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(`Error updating ${role} profile:`, error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
+   * Reset a user's password (admin only, no current password required).
+   * @param {string} userId - UUID of the user (users.id)
+   * @param {string} newPassword - Plain text new password
+   * @returns {Promise<boolean>} success flag
+   */
+  async resetUserPassword(userId, newPassword) {
+    if (!userId) throw new Error("userId is required");
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error("New password must be at least 6 characters");
+    }
+
+    const hashedPassword = await PasswordUtil.hashPassword(newPassword);
+
+    const { error } = await this.supabase
+      .from("users")
+      .update({ password_hash: hashedPassword })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error resetting user password:", error);
+      throw error;
+    }
+
+    return true;
+  }
+}
