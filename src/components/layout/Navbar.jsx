@@ -139,20 +139,24 @@ export default function Navbar({ userRole, userName }) {
               {navItems.map((item) => {
                 const Icon = item.icon
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
+                  <Button
+                    className={`px-3 py-2 rounded-md transition-colors ${
                       isActive(item.href)
                         ? 'bg-primary-foreground/20'
                         : 'hover:bg-primary-foreground/10'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="font-montserrat text-sm">
-                      {item.label}
-                    </span>
-                  </Link>
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex flex-row items-center space-x-1"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="font-montserrat text-sm">
+                        {item.label}
+                      </span>
+                    </Link>
+                  </Button>
                 )
               })}
             </div>

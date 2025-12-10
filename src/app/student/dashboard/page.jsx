@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   GraduationCap,
   CalendarCheck,
@@ -11,70 +11,70 @@ import {
   Calendar,
   Home,
   TrendingUp,
-} from "lucide-react";
-import Link from "next/link";
-import { ThreeDots } from "react-loader-spinner";
+} from 'lucide-react'
+import Link from 'next/link'
+import { ThreeDots } from 'react-loader-spinner'
 
 export default function StudentDashboard() {
-  const [student, setStudent] = useState(null);
-  const [gpa, setGpa] = useState(0);
-  const [attendanceRate, setAttendanceRate] = useState(0);
-  const [totalClasses, setTotalClasses] = useState(0);
-  const [unpaidFeesCount, setUnpaidFeesCount] = useState(0);
-  const [upcomingExams, setUpcomingExams] = useState([]);
-  const [recentScores, setRecentScores] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [student, setStudent] = useState(null)
+  const [gpa, setGpa] = useState(0)
+  const [attendanceRate, setAttendanceRate] = useState(0)
+  const [totalClasses, setTotalClasses] = useState(0)
+  const [unpaidFeesCount, setUnpaidFeesCount] = useState(0)
+  const [upcomingExams, setUpcomingExams] = useState([])
+  const [recentScores, setRecentScores] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Fetch student data
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/student/dashboard");
-        const data = await response.json();
+        const response = await fetch('/api/student/dashboard')
+        const data = await response.json()
 
         if (data.success) {
-          setStudent({ name: data.name || "Student" });
-          setGpa(parseFloat(data.gpa) || 0);
-          setAttendanceRate(parseFloat(data.attendanceRate) || 0);
-          setTotalClasses(data.totalClasses || 0);
-          setUnpaidFeesCount(data.unpaidFeesCount || 0);
-          setUpcomingExams(data.upcomingExams || []);
-          setRecentScores(data.recentScores || []);
+          setStudent({ name: data.name || 'Student' })
+          setGpa(parseFloat(data.gpa) || 0)
+          setAttendanceRate(parseFloat(data.attendanceRate) || 0)
+          setTotalClasses(data.totalClasses || 0)
+          setUnpaidFeesCount(data.unpaidFeesCount || 0)
+          setUpcomingExams(data.upcomingExams || [])
+          setRecentScores(data.recentScores || [])
         } else {
-          console.error("Error fetching dashboard data:", data.error);
+          console.error('Error fetching dashboard data:', data.error)
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
 
   const getGpaColor = (gpa) => {
-    if (gpa >= 3.5) return "text-green-600 dark:text-green-400";
-    if (gpa >= 3.0) return "text-blue-600 dark:text-blue-400";
-    if (gpa >= 2.0) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
+    if (gpa >= 3.5) return 'text-green-600 dark:text-green-400'
+    if (gpa >= 3.0) return 'text-blue-600 dark:text-blue-400'
+    if (gpa >= 2.0) return 'text-yellow-600 dark:text-yellow-400'
+    return 'text-red-600 dark:text-red-400'
+  }
 
   const getAttendanceColor = (rate) => {
-    if (rate >= 90) return "text-green-600 dark:text-green-400";
-    if (rate >= 75) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
+    if (rate >= 90) return 'text-green-600 dark:text-green-400'
+    if (rate >= 75) return 'text-yellow-600 dark:text-yellow-400'
+    return 'text-red-600 dark:text-red-400'
+  }
 
   if (loading) {
     return (
@@ -90,7 +90,7 @@ export default function StudentDashboard() {
           wrapperClass=""
         />
       </div>
-    );
+    )
   }
 
   return (
@@ -99,7 +99,7 @@ export default function StudentDashboard() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Home className="w-8 h-8" />
-            Welcome, {student?.name || "Student"}
+            Welcome, {student?.name || 'Student'}
           </h1>
           <p className="text-muted-foreground mt-2">Your academic overview</p>
         </div>
@@ -177,20 +177,20 @@ export default function StudentDashboard() {
             <div
               className={`text-3xl font-bold ${
                 unpaidFeesCount > 0
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-green-600 dark:text-green-400"
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-green-600 dark:text-green-400'
               }`}
             >
               {unpaidFeesCount}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {unpaidFeesCount > 0 ? "Fees pending" : "All fees paid"}
+              {unpaidFeesCount > 0 ? 'Fees pending' : 'All fees paid'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="gap-6">
         {/* Upcoming Exams */}
         {upcomingExams.length > 0 && (
           <Card>
@@ -210,7 +210,7 @@ export default function StudentDashboard() {
                     <div className="flex-1">
                       <p className="font-medium">{exam.className}</p>
                       <p className="text-sm text-muted-foreground">
-                        {exam.examType?.toUpperCase() || "Exam"} •{" "}
+                        {exam.examType?.toUpperCase() || 'Exam'} •{' '}
                         {formatDate(exam.examDate)}
                       </p>
                     </div>
@@ -252,7 +252,7 @@ export default function StudentDashboard() {
                     <div className="flex-1">
                       <p className="font-medium">{score.className}</p>
                       <p className="text-sm text-muted-foreground">
-                        {score.examType?.toUpperCase() || "Exam"} •{" "}
+                        {score.examType?.toUpperCase() || 'Exam'} •{' '}
                         {formatDate(score.examDate)}
                       </p>
                     </div>
@@ -260,15 +260,15 @@ export default function StudentDashboard() {
                       <div
                         className={`text-2xl font-bold ${
                           score.score >= 90
-                            ? "text-green-600 dark:text-green-400"
+                            ? 'text-green-600 dark:text-green-400'
                             : score.score >= 75
-                            ? "text-blue-600 dark:text-blue-400"
+                            ? 'text-blue-600 dark:text-blue-400'
                             : score.score >= 60
-                            ? "text-yellow-600 dark:text-yellow-400"
-                            : "text-red-600 dark:text-red-400"
+                            ? 'text-yellow-600 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400'
                         }`}
                       >
-                        {score.score || "N/A"}
+                        {score.score || 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -329,5 +329,5 @@ export default function StudentDashboard() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

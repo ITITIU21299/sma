@@ -1,67 +1,72 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Exam } from "@/models/Exam";
-import { Calendar, Clock, MapPin } from "lucide-react";
-import { ThreeDots } from "react-loader-spinner";
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Exam } from '@/models/Exam'
+import { Calendar, Clock, MapPin } from 'lucide-react'
+import { ThreeDots } from 'react-loader-spinner'
 
 export default function StudentExamSchedulePage() {
-  const [exams, setExams] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [availableSemesters, setAvailableSemesters] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedExamType, setSelectedExamType] = useState("midterm");
+  const [exams, setExams] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [availableSemesters, setAvailableSemesters] = useState([])
+  const [selectedSemester, setSelectedSemester] = useState('')
+  const [selectedYear, setSelectedYear] = useState('')
+  const [selectedExamType, setSelectedExamType] = useState('midterm')
 
   const normalizeSemesterLabel = (semester) => {
-    if (!semester) return "";
-    const s = semester.toString().trim().toLowerCase();
-    if (s === "1" || s === "fall") return "Fall";
-    if (s === "2" || s === "spring") return "Spring";
-    if (s === "3" || s === "summer") return "Summer";
-    return semester.toString();
-  };
+    if (!semester) return ''
+    const s = semester.toString().trim().toLowerCase()
+    if (s === '1' || s === 'fall') return 'Fall'
+    if (s === '2' || s === 'spring') return 'Spring'
+    if (s === '3' || s === 'summer') return 'Summer'
+    return semester.toString()
+  }
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+    if (!dateString) return 'N/A'
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(':')
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setLoading(true)
         const [examsRes, semestersRes] = await Promise.all([
-          fetch("/api/student/exam-schedule"),
-          fetch("/api/student/semesters"),
-        ]);
+          fetch('/api/student/exam-schedule'),
+          fetch('/api/student/semesters'),
+        ])
 
-        const examsJson = await examsRes.json();
-        const semestersJson = await semestersRes.json();
+        const examsJson = await examsRes.json()
+        const semestersJson = await semestersRes.json()
 
         const examRecords =
           examsJson.success && examsJson.data
             ? examsJson.data
                 .filter(
                   (exam) =>
-                    exam.exam_type === "midterm" || exam.exam_type === "final"
+                    exam.exam_type === 'midterm' || exam.exam_type === 'final'
                 )
                 .map((exam) => {
-                  const examDate = new Date(exam.exam_date);
+                  const examDate = new Date(exam.exam_date)
                   const week = Math.ceil(
                     (examDate - new Date(exam.year, 0, 1)) /
                       (7 * 24 * 60 * 60 * 1000)
-                  );
+                  )
 
-                  const startTime = exam.start_time || "08:00";
-                  const endTime = exam.end_time || "10:00";
-                  const roomName = exam.room_name || "TBA";
+                  const startTime = exam.start_time || '08:00'
+                  const endTime = exam.end_time || '10:00'
+                  const roomName = exam.room_name || 'TBA'
 
                   return new Exam(
                     exam.subject_name,
@@ -70,36 +75,36 @@ export default function StudentExamSchedulePage() {
                     startTime,
                     endTime,
                     roomName,
-                    exam.semester || "1",
+                    exam.semester || '1',
                     exam.year?.toString() ||
                       new Date().getFullYear().toString(),
                     exam.exam_type,
-                    exam.class_name || ""
-                  );
+                    exam.class_name || ''
+                  )
                 })
-            : [];
+            : []
 
-        setExams(examRecords);
+        setExams(examRecords)
 
         const semesters =
           semestersJson.success && semestersJson.semesters
             ? semestersJson.semesters
-            : [];
-        setAvailableSemesters(semesters);
+            : []
+        setAvailableSemesters(semesters)
 
         // Determine default semester/year (current)
-        const today = new Date();
-        const year = today.getFullYear();
-        const fallStart = new Date(year, 8, 1);
-        const springStart = new Date(year, 0, 1);
-        let targetLabel = "Spring";
-        let targetYear = year;
+        const today = new Date()
+        const year = today.getFullYear()
+        const fallStart = new Date(year, 8, 1)
+        const springStart = new Date(year, 0, 1)
+        let targetLabel = 'Spring'
+        let targetYear = year
         if (today >= fallStart) {
-          targetLabel = "Fall";
-          targetYear = year;
+          targetLabel = 'Fall'
+          targetYear = year
         } else if (today >= springStart) {
-          targetLabel = "Spring";
-          targetYear = year;
+          targetLabel = 'Spring'
+          targetYear = year
         }
 
         const currentSem =
@@ -107,11 +112,11 @@ export default function StudentExamSchedulePage() {
             (s) =>
               normalizeSemesterLabel(s.semester) === targetLabel &&
               Number(s.year) === targetYear
-          ) || semesters[0];
+          ) || semesters[0]
 
         if (currentSem) {
-          setSelectedSemester(currentSem.semester.toString());
-          setSelectedYear(currentSem.year.toString());
+          setSelectedSemester(currentSem.semester.toString())
+          setSelectedYear(currentSem.year.toString())
         }
 
         // Default exam type: next upcoming midterm/final in current semester/year
@@ -124,38 +129,38 @@ export default function StudentExamSchedulePage() {
                   String(exam.subjectYear) === String(currentSem.year))) &&
               new Date(exam.date) >= new Date()
           )
-          .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+          .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
 
         if (upcomingExam?.getExamType()) {
-          setSelectedExamType(upcomingExam.getExamType());
+          setSelectedExamType(upcomingExam.getExamType())
         } else {
           const hasMidterm = examRecords.some(
-            (e) => e.getExamType() === "midterm"
-          );
-          setSelectedExamType(hasMidterm ? "midterm" : "final");
+            (e) => e.getExamType() === 'midterm'
+          )
+          setSelectedExamType(hasMidterm ? 'midterm' : 'final')
         }
       } catch (error) {
-        console.error("Error fetching exam schedule:", error);
-        setExams([]);
+        console.error('Error fetching exam schedule:', error)
+        setExams([])
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   const filteredExams = exams.filter((exam) => {
     const matchesSemester =
       !selectedSemester ||
       normalizeSemesterLabel(exam.getSemester()) ===
-        normalizeSemesterLabel(selectedSemester);
+        normalizeSemesterLabel(selectedSemester)
     const matchesYear =
-      !selectedYear || String(exam.getSubjectYear()) === String(selectedYear);
+      !selectedYear || String(exam.getSubjectYear()) === String(selectedYear)
     const matchesType =
-      !selectedExamType || exam.getExamType() === selectedExamType;
-    return matchesSemester && matchesYear && matchesType;
-  });
+      !selectedExamType || exam.getExamType() === selectedExamType
+    return matchesSemester && matchesYear && matchesType
+  })
 
   if (loading) {
     return (
@@ -171,7 +176,7 @@ export default function StudentExamSchedulePage() {
           wrapperClass=""
         />
       </div>
-    );
+    )
   }
 
   return (
@@ -188,16 +193,16 @@ export default function StudentExamSchedulePage() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Semester</span>
             <select
-              className="border rounded-md px-3 py-2 text-sm"
+              className="border rounded-md px-3 py-2 text-sm bg-background"
               value={
                 selectedSemester && selectedYear
                   ? `${selectedSemester}|${selectedYear}`
-                  : ""
+                  : ''
               }
               onChange={(e) => {
-                const [sem, yr] = e.target.value.split("|");
-                setSelectedSemester(sem);
-                setSelectedYear(yr);
+                const [sem, yr] = e.target.value.split('|')
+                setSelectedSemester(sem)
+                setSelectedYear(yr)
               }}
             >
               {availableSemesters.map((sem) => (
@@ -213,7 +218,7 @@ export default function StudentExamSchedulePage() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Exam</span>
             <select
-              className="border rounded-md px-3 py-2 text-sm"
+              className="border rounded-md px-3 py-2 text-sm bg-background"
               value={selectedExamType}
               onChange={(e) => setSelectedExamType(e.target.value)}
             >
@@ -267,7 +272,8 @@ export default function StudentExamSchedulePage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Time</p>
                       <p className="font-semibold">
-                        {exam.getStartTime()} - {exam.getEndTime()}
+                        {formatTime(exam.getStartTime())} -{' '}
+                        {formatTime(exam.getEndTime())}
                       </p>
                     </div>
                   </div>
@@ -285,5 +291,5 @@ export default function StudentExamSchedulePage() {
         </div>
       )}
     </div>
-  );
+  )
 }

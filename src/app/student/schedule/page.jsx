@@ -162,7 +162,7 @@ export default function StudentSchedulePage() {
     const startUnit = getUnitFromTime(startTime)
     const endUnit = getUnitFromTime(endTime)
     if (!startUnit || !endUnit) return 1
-    return Math.max(1, endUnit - startUnit + 1)
+    return Math.max(1, endUnit - startUnit)
   }
 
   // Fetch available semesters
