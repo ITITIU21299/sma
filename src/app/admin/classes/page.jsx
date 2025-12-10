@@ -295,10 +295,8 @@ export default function AdminClassesPage() {
             {/* Header */}
             <div className="p-6 border-b flex items-start justify-between">
               <div>
-                <h2 className="text-2xl font-bold">
-                  {selectedClass.className}
-                </h2>
-                <p className="text-muted-foreground mt-1">
+                <h2 className="text-lg font-bold">{selectedClass.className}</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
                   {selectedClass.subject?.code} - {selectedClass.subject?.name}{' '}
                   • {selectedClass.semester} {selectedClass.year}
                 </p>
@@ -320,17 +318,25 @@ export default function AdminClassesPage() {
             <div className="p-6 overflow-y-auto flex-1">
               {loadingDetails ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-lg">Loading details...</div>
+                  <ThreeDots
+                    visible={true}
+                    height="100"
+                    width="100"
+                    color="#4fa94d"
+                    radius="9"
+                    ariaLabel="three-dots-loading"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                  />
                 </div>
               ) : classDetails ? (
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <BookOpen className="w-5 h-5" />
                       Class Information
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <Label className="text-muted-foreground">
                           Class Name
@@ -357,8 +363,7 @@ export default function AdminClassesPage() {
                       {classDetails.staff && (
                         <>
                           <div>
-                            <Label className="text-muted-foreground flex items-center gap-1">
-                              <Briefcase className="w-4 h-4" />
+                            <Label className="text-muted-foreground flex items-center mb-1 gap-1">
                               Instructor
                             </Label>
                             <p className="font-medium">
@@ -387,7 +392,6 @@ export default function AdminClassesPage() {
                   {/* Enrollments */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Users className="w-5 h-5" />
                       Enrolled Students ({classDetails.enrollments?.length || 0}
                       )
                     </h3>
@@ -397,7 +401,7 @@ export default function AdminClassesPage() {
                         {classDetails.enrollments.map((enrollment) => (
                           <Card key={enrollment.id}>
                             <CardContent className="p-3">
-                              <p className="font-medium">
+                              <p className="font-medium text-sm">
                                 {enrollment.student?.fullName || 'Unknown'}
                               </p>
                               <p className="text-sm text-muted-foreground">
@@ -418,7 +422,6 @@ export default function AdminClassesPage() {
                   {/* Timetable */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Clock className="w-5 h-5" />
                       Schedule ({classDetails.timetable?.length || 0})
                     </h3>
                     {classDetails.timetable &&
@@ -440,13 +443,7 @@ export default function AdminClassesPage() {
                                 <div className="text-right">
                                   {slot.rooms && (
                                     <p className="text-sm font-medium flex items-center gap-1">
-                                      <MapPin className="w-4 h-4" />
                                       {slot.rooms.room_name}
-                                    </p>
-                                  )}
-                                  {slot.staff && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {slot.staff.full_name}
                                     </p>
                                   )}
                                 </div>
@@ -463,74 +460,38 @@ export default function AdminClassesPage() {
                   {/* Exams */}
                   <div>
                     <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <ClipboardList className="w-5 h-5" />
-                      Exams ({classDetails.exams?.length || 0})
+                      Exams ({classDetails.exams?.length - 1 || 0})
                     </h3>
                     {classDetails.exams && classDetails.exams.length > 0 ? (
                       <div className="space-y-2">
-                        {classDetails.exams.map((exam) => (
-                          <Card key={exam.id}>
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">
-                                    {exam.exam_type?.toUpperCase() || 'N/A'}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    {formatDate(exam.exam_date)}
-                                  </p>
+                        {classDetails.exams
+                          .filter((exam) => exam.exam_type !== 'inclass')
+                          .map((exam) => (
+                            <Card key={exam.id}>
+                              <CardContent className="p-3">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-medium">
+                                      {exam.exam_type
+                                        ? exam.exam_type
+                                            .toString()
+                                            .charAt(0)
+                                            .toUpperCase() +
+                                          exam.exam_type.toString().slice(1)
+                                        : 'N/A'}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                      <Calendar className="w-4 h-4" />
+                                      {formatDate(exam.exam_date)}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              </CardContent>
+                            </Card>
+                          ))}
                       </div>
                     ) : (
                       <p className="text-muted-foreground">No exams found</p>
-                    )}
-                  </div>
-
-                  {/* Recent Attendance */}
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Calendar className="w-5 h-5" />
-                      Recent Attendance ({classDetails.attendance?.length ||
-                        0}{' '}
-                      records)
-                    </h3>
-                    {classDetails.attendance &&
-                    classDetails.attendance.length > 0 ? (
-                      <div className="space-y-2">
-                        {classDetails.attendance.slice(0, 10).map((att) => (
-                          <Card key={att.id}>
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium">
-                                    {formatDate(att.date)}
-                                  </p>
-                                </div>
-                                <div
-                                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    att.status === 'present'
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                      : att.status === 'late'
-                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                  }`}
-                                >
-                                  {att.status?.toUpperCase() || 'N/A'}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        No attendance records found
-                      </p>
                     )}
                   </div>
                 </div>

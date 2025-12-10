@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   MessageSquare,
   Filter,
@@ -10,17 +10,25 @@ import {
   X,
   AlertCircle,
   ChevronDown,
-} from 'lucide-react';
+} from 'lucide-react'
+import { ThreeDots } from 'react-loader-spinner'
+import { toast, ToastContainer } from 'react-toastify'
 
 export default function AdminFeedbackPage() {
-  const [feedback, setFeedback] = useState([]);
-  const [filteredFeedback, setFilteredFeedback] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('pending');
-  const [sortBy, setSortBy] = useState('date_desc');
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
+  const [feedback, setFeedback] = useState([])
+  const [filteredFeedback, setFilteredFeedback] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedStatus, setSelectedStatus] = useState('pending')
+  const [sortBy, setSortBy] = useState('date_desc')
+  const [selectedFeedback, setSelectedFeedback] = useState(null)
+  const [showPopup, setShowPopup] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('darkMode') === 'true'
+    }
+    return false
+  })
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -30,7 +38,7 @@ export default function AdminFeedbackPage() {
     { value: 'suggestion', label: 'Suggestion' },
     { value: 'complaint', label: 'Complaint' },
     { value: 'other', label: 'Other' },
-  ];
+  ]
 
   const sortOptions = [
     { value: 'date_desc', label: 'Date (Newest First)' },
@@ -38,82 +46,86 @@ export default function AdminFeedbackPage() {
     { value: 'high', label: 'Priority: High' },
     { value: 'medium', label: 'Priority: Medium' },
     { value: 'low', label: 'Priority: Low' },
-  ];
+  ]
 
   const statusOptions = [
     { value: 'all', label: 'All' },
     { value: 'pending', label: 'Pending' },
     { value: 'resolved', label: 'Resolved' },
-  ];
+  ]
 
-  const priorityOrder = { high: 3, medium: 2, low: 1 };
-
-  useEffect(() => {
-    fetchFeedback();
-  }, [selectedCategory, selectedStatus]);
-
-  useEffect(() => {
-    applySorting();
-  }, [feedback, sortBy]);
+  const priorityOrder = { high: 3, medium: 2, low: 1 }
 
   const fetchFeedback = async () => {
     try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (selectedCategory !== 'all') {
-        params.append('category', selectedCategory);
-      }
-      if (selectedStatus !== 'all') {
-        params.append('status', selectedStatus);
-      }
-      const queryString = params.toString();
-      const url = `/api/admin/feedback${queryString ? `?${queryString}` : ''}`;
-      const response = await fetch(url);
-      const data = await response.json();
+      setLoading(true)
+      const url = `/api/admin/feedback`
+      const response = await fetch(url)
+      const data = await response.json()
 
       if (data.success) {
-        setFeedback(data.data || []);
+        setFeedback(data.data || [])
       } else {
-        console.error('Error fetching feedback:', data.error);
-        setFeedback([]);
+        console.error('Error fetching feedback:', data.error)
+        setFeedback([])
       }
     } catch (error) {
-      console.error('Error fetching feedback:', error);
-      setFeedback([]);
+      console.error('Error fetching feedback:', error)
+      setFeedback([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const applySorting = () => {
-    let sorted = [...feedback];
+  const handleFilter = () => {
+    let filteredList = [...feedback]
 
     switch (sortBy) {
       case 'date_desc':
-        sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        break;
+        filteredList.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        )
+        break
       case 'date_asc':
-        sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        break;
+        filteredList.sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        )
+        break
       case 'high':
-        sorted.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
-        break;
+        filteredList.sort(
+          (a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]
+        )
+        break
       case 'medium':
-        sorted.sort((a, b) => {
-          if (a.priority === 'medium' && b.priority !== 'medium') return -1;
-          if (b.priority === 'medium' && a.priority !== 'medium') return 1;
-          return priorityOrder[b.priority] - priorityOrder[a.priority];
-        });
-        break;
+        filteredList.sort((a, b) => {
+          if (a.priority === 'medium' && b.priority !== 'medium') return -1
+          if (b.priority === 'medium' && a.priority !== 'medium') return 1
+          return priorityOrder[b.priority] - priorityOrder[a.priority]
+        })
+        break
       case 'low':
-        sorted.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-        break;
+        filteredList.sort(
+          (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+        )
+        break
       default:
-        break;
+        break
     }
 
-    setFilteredFeedback(sorted);
-  };
+    if (selectedCategory !== 'all') {
+      filteredList = filteredList.filter(
+        (item) => item.category === selectedCategory
+      )
+    }
+
+    if (selectedStatus !== 'all') {
+      filteredList = filteredList.filter(
+        (item) => item.status === selectedStatus
+      )
+    }
+
+    setFilteredFeedback(filteredList)
+  }
 
   const updatePriority = async (feedbackId, priority) => {
     try {
@@ -121,109 +133,139 @@ export default function AdminFeedbackPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ feedbackId, priority }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
       if (data.success) {
         // Update local state
         setFeedback((prev) =>
           prev.map((item) =>
             item.id === feedbackId ? { ...item, priority } : item
           )
-        );
+        )
         if (selectedFeedback?.id === feedbackId) {
-          setSelectedFeedback({ ...selectedFeedback, priority });
+          setSelectedFeedback({ ...selectedFeedback, priority })
         }
       } else {
-        console.error('Error updating priority:', data.error);
+        console.error('Error updating priority:', data.error)
       }
     } catch (error) {
-      console.error('Error updating priority:', error);
+      console.error('Error updating priority:', error)
     }
-  };
+  }
 
   const updateStatus = async (feedbackId, newStatus) => {
+    toast.loading('Updating status...')
     try {
       const response = await fetch('/api/admin/feedback', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ feedbackId, status: newStatus }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
+      toast.dismiss()
       if (data.success) {
-        // Update local state
-        setFeedback((prev) =>
-          prev.map((item) =>
-            item.id === feedbackId ? { ...item, status: newStatus } : item
+        toast.success('Status updated successfully')
+        setTimeout(() => {
+          // Update local state
+          setFeedback((prev) =>
+            prev.map((item) =>
+              item.id === feedbackId ? { ...item, status: newStatus } : item
+            )
           )
-        );
-        if (selectedFeedback?.id === feedbackId) {
-          setSelectedFeedback({ ...selectedFeedback, status: newStatus });
-        }
-        // If status filter is active and item no longer matches, refetch
-        if (selectedStatus !== 'all' && newStatus !== selectedStatus) {
-          fetchFeedback();
-        }
+          if (selectedFeedback?.id === feedbackId) {
+            setSelectedFeedback({ ...selectedFeedback, status: newStatus })
+          }
+          // If status filter is active and item no longer matches, refetch
+          if (selectedStatus !== 'all' && newStatus !== selectedStatus) {
+            fetchFeedback()
+          }
+        }, 500)
       } else {
-        console.error('Error updating status:', data.error);
+        console.error('Error updating status:', data.error)
+        toast.error(data.error || 'Error updating status')
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating status:', error)
+      toast.error('Unexpected error while updating status')
     }
-  };
+  }
 
   const toggleStatus = () => {
-    if (!selectedFeedback) return;
-    const newStatus = selectedFeedback.status === 'pending' ? 'resolved' : 'pending';
-    updateStatus(selectedFeedback.id, newStatus);
-  };
+    if (!selectedFeedback) return
+    const newStatus =
+      selectedFeedback.status === 'pending' ? 'resolved' : 'pending'
+    updateStatus(selectedFeedback.id, newStatus)
+  }
 
   const handleFeedbackClick = (item) => {
-    setSelectedFeedback(item);
-    setShowPopup(true);
-  };
+    setSelectedFeedback(item)
+    setShowPopup(true)
+  }
 
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
       case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
     }
-  };
+  }
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-  };
+    })
+  }
 
   const getCategoryLabel = (category) => {
-    return categories.find((c) => c.value === category)?.label || category;
-  };
+    return categories.find((c) => c.value === category)?.label || category
+  }
+
+  useEffect(() => {
+    fetchFeedback()
+  }, [])
+
+  useEffect(() => {
+    handleFilter()
+  }, [feedback, sortBy, selectedCategory, selectedStatus])
+
+  useEffect(() => {
+    setDarkMode(localStorage.getItem('darkMode') === 'true')
+  }, [localStorage.getItem('darkMode')])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading...</div>
+      <div className="flex justify-center items-center h-screen">
+        <ThreeDots
+          visible={true}
+          height="100"
+          width="100"
+          color="#4fa94d"
+          radius="9"
+          ariaLabel="three-dots-loading"
+          wrapperStyle={{}}
+          wrapperClass=""
+        />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-roboto">
+      <ToastContainer theme={darkMode ? 'light' : 'dark'} />
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessageSquare className="w-8 h-8" />
           Feedback Management
         </h1>
@@ -232,12 +274,11 @@ export default function AdminFeedbackPage() {
       {/* Filters and Sort */}
       <div className="flex gap-4 items-center flex-wrap">
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5" />
           <label className="text-sm font-medium">Category:</label>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border rounded-md bg-background"
+            className="px-3 py-2 border rounded-md bg-background text-sm"
           >
             {categories.map((cat) => (
               <option key={cat.value} value={cat.value}>
@@ -252,7 +293,7 @@ export default function AdminFeedbackPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-3 py-2 border rounded-md bg-background"
+            className="px-3 py-2 border rounded-md bg-background text-sm"
           >
             {statusOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -263,12 +304,11 @@ export default function AdminFeedbackPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-5 h-5" />
           <label className="text-sm font-medium">Sort:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border rounded-md bg-background"
+            className="px-3 py-2 border rounded-md bg-background text-sm"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -328,10 +368,15 @@ export default function AdminFeedbackPage() {
                         <span className="capitalize">{item.status}</span>
                       </div>
                     </div>
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Button
                         size="sm"
-                        variant={item.priority === 'high' ? 'default' : 'outline'}
+                        variant={
+                          item.priority === 'high' ? 'default' : 'outline'
+                        }
                         onClick={() => updatePriority(item.id, 'high')}
                         className="text-xs"
                       >
@@ -339,7 +384,9 @@ export default function AdminFeedbackPage() {
                       </Button>
                       <Button
                         size="sm"
-                        variant={item.priority === 'medium' ? 'default' : 'outline'}
+                        variant={
+                          item.priority === 'medium' ? 'default' : 'outline'
+                        }
                         onClick={() => updatePriority(item.id, 'medium')}
                         className="text-xs"
                       >
@@ -347,7 +394,9 @@ export default function AdminFeedbackPage() {
                       </Button>
                       <Button
                         size="sm"
-                        variant={item.priority === 'low' ? 'default' : 'outline'}
+                        variant={
+                          item.priority === 'low' ? 'default' : 'outline'
+                        }
                         onClick={() => updatePriority(item.id, 'low')}
                         className="text-xs"
                       >
@@ -394,7 +443,9 @@ export default function AdminFeedbackPage() {
                   <Button
                     size="sm"
                     variant={
-                      selectedFeedback.priority === 'high' ? 'default' : 'outline'
+                      selectedFeedback.priority === 'high'
+                        ? 'default'
+                        : 'outline'
                     }
                     onClick={() => updatePriority(selectedFeedback.id, 'high')}
                   >
@@ -403,16 +454,22 @@ export default function AdminFeedbackPage() {
                   <Button
                     size="sm"
                     variant={
-                      selectedFeedback.priority === 'medium' ? 'default' : 'outline'
+                      selectedFeedback.priority === 'medium'
+                        ? 'default'
+                        : 'outline'
                     }
-                    onClick={() => updatePriority(selectedFeedback.id, 'medium')}
+                    onClick={() =>
+                      updatePriority(selectedFeedback.id, 'medium')
+                    }
                   >
                     Med
                   </Button>
                   <Button
                     size="sm"
                     variant={
-                      selectedFeedback.priority === 'low' ? 'default' : 'outline'
+                      selectedFeedback.priority === 'low'
+                        ? 'default'
+                        : 'outline'
                     }
                     onClick={() => updatePriority(selectedFeedback.id, 'low')}
                   >
@@ -457,7 +514,9 @@ export default function AdminFeedbackPage() {
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">
                       Last Updated
                     </h3>
-                    <p className="text-base">{formatDate(selectedFeedback.updatedAt)}</p>
+                    <p className="text-base">
+                      {formatDate(selectedFeedback.updatedAt)}
+                    </p>
                   </div>
                 )}
               </div>
@@ -467,16 +526,19 @@ export default function AdminFeedbackPage() {
             <div className="p-6 border-t flex justify-end">
               <Button
                 onClick={toggleStatus}
-                variant={selectedFeedback.status === 'resolved' ? 'default' : 'outline'}
+                variant={
+                  selectedFeedback.status === 'resolved' ? 'default' : 'outline'
+                }
                 className="min-w-[120px]"
               >
-                {selectedFeedback.status === 'pending' ? 'Mark as Resolved' : 'Mark as Pending'}
+                {selectedFeedback.status === 'pending'
+                  ? 'Mark as Resolved'
+                  : 'Mark as Pending'}
               </Button>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }
-

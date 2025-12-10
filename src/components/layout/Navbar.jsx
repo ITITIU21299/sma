@@ -85,12 +85,10 @@ export default function Navbar({ userRole, userName }) {
       label: 'Attendance',
       icon: CalendarCheck,
     },
-    //{ href: "/staff/assign-room", label: "Assign Room", icon: ClipboardList },
   ]
 
   const adminNavItems = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: Home },
-    //{ href: '/admin/assign-room', label: 'Assign Room', icon: ClipboardList },
     { href: '/admin/students', label: 'Students', icon: Users },
     { href: '/admin/staff', label: 'Staff', icon: Briefcase },
     { href: '/admin/classes', label: 'Classes', icon: GraduationCap },
@@ -103,12 +101,13 @@ export default function Navbar({ userRole, userName }) {
       : userRole === 'admin'
       ? adminNavItems
       : staffNavItems
+
   const profilePath =
     userRole === 'student'
       ? '/student/profile'
-      : userRole === 'admin'
-      ? '/admin/profile'
-      : '/staff/profile'
+      : userRole === 'staff'
+      ? '/staff/profile'
+      : null
 
   return (
     <nav className="bg-primary text-primary-foreground shadow-lg">
@@ -176,25 +175,27 @@ export default function Navbar({ userRole, userName }) {
                   </span>
                 )}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`px-3 py-2 rounded-md transition-colors ${
-                  isActive(profilePath)
-                    ? 'bg-primary-foreground/20'
-                    : 'hover:bg-primary-foreground/10'
-                }`}
-              >
-                <Link
-                  className="flex items-center space-x-1"
-                  href={profilePath}
+              {userRole !== 'admin' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`px-3 py-2 rounded-md transition-colors ${
+                    isActive(profilePath)
+                      ? 'bg-primary-foreground/20'
+                      : 'hover:bg-primary-foreground/10'
+                  }`}
                 >
-                  <User className="w-4 h-4" />
-                  <span className="hidden md:inline font-montserrat">
-                    Profile
-                  </span>
-                </Link>
-              </Button>
+                  <Link
+                    className="flex items-center space-x-1"
+                    href={profilePath}
+                  >
+                    <User className="w-4 h-4" />
+                    <span className="hidden md:inline font-montserrat">
+                      Profile
+                    </span>
+                  </Link>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 onClick={handleLogout}
