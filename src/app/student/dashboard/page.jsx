@@ -64,7 +64,7 @@ export default function StudentDashboard() {
   };
 
   const getGpaColor = (gpa) => {
-    if (gpa >= 4.0) return "text-green-600 dark:text-green-400";
+    if (gpa >= 3.5) return "text-green-600 dark:text-green-400";
     if (gpa >= 3.0) return "text-blue-600 dark:text-blue-400";
     if (gpa >= 2.0) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
@@ -120,7 +120,7 @@ export default function StudentDashboard() {
             <div className={`text-3xl font-bold ${getGpaColor(gpa)}`}>
               {gpa.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Out of 5.0 scale</p>
+            <p className="text-xs text-muted-foreground mt-1">Out of 4.0 scale</p>
           </CardContent>
         </Card>
 

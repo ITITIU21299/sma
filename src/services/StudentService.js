@@ -217,7 +217,9 @@ export class StudentService {
 
           if (validScores.length > 0) {
             const sum = validScores.reduce((a, b) => a + b, 0);
-            gpa = sum / validScores.length / 20; // Convert 0-100 scale to 0-5 GPA scale
+            const averageScore = sum / validScores.length;
+            const convertedGpa = averageScore / 25; // Convert 0-100 scale to 0-4 GPA scale
+            gpa = Math.min(convertedGpa, 4);
           }
         }
       }
