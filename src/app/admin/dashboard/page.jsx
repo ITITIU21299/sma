@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Users,
   GraduationCap,
@@ -13,34 +13,34 @@ import {
   Briefcase,
   Home,
   ArrowRight,
-} from 'lucide-react';
-import { ThreeDots } from 'react-loader-spinner';
-import Link from 'next/link';
+} from 'lucide-react'
+import { ThreeDots } from 'react-loader-spinner'
+import Link from 'next/link'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const fetchData = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard');
-      const data = await response.json();
+      const response = await fetch('/api/admin/dashboard')
+      const data = await response.json()
 
       if (data.success) {
-        setStats(data.data);
+        setStats(data.data)
       } else {
-        console.error('Error fetching dashboard data:', data.error);
+        console.error('Error fetching dashboard data:', data.error)
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      console.error('Error fetching dashboard data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   if (loading) {
     return (
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
           wrapperClass=""
         />
       </div>
-    );
+    )
   }
 
   const statCards = [
@@ -120,29 +120,39 @@ export default function AdminDashboard() {
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-100 dark:bg-indigo-900',
     },
-  ];
+  ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-roboto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Home className="w-8 h-8" />
             Admin Dashboard
           </h1>
-          <p className="text-muted-foreground mt-2">Welcome to the admin panel</p>
+          <p className="text-muted-foreground mt-2">
+            Welcome to the admin panel
+          </p>
         </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card, index) => {
-          const Icon = card.icon;
-          const CardComponent = card.link ? Link : 'div';
-          const cardProps = card.link ? { href: card.link } : {};
+          const Icon = card.icon
+          const CardComponent = card.link ? Link : 'div'
+          const cardProps = card.link ? { href: card.link } : {}
 
           return (
-            <CardComponent key={index} {...cardProps} className={card.link ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}>
+            <CardComponent
+              key={index}
+              {...cardProps}
+              className={
+                card.link
+                  ? 'cursor-pointer hover:shadow-lg transition-shadow'
+                  : ''
+              }
+            >
               <Card className="h-full">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -163,7 +173,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </CardComponent>
-          );
+          )
         })}
       </div>
 
@@ -202,6 +212,5 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
-

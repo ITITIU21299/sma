@@ -65,7 +65,6 @@ export default function ChangePasswordPage() {
 
   const handleShowPassword = (value) => {
     setIsShowPassword(value)
-    console.log('Show password:', value)
   }
 
   useEffect(() => {
