@@ -10,7 +10,9 @@ export class Exam {
     endTime,
     room,
     semester,
-    subjectYear
+    subjectYear,
+    examType = "",
+    className = ""
   ) {
     this.subject = subject;
     this.date = date;
@@ -20,6 +22,8 @@ export class Exam {
     this.room = room;
     this.semester = semester;
     this.subjectYear = subjectYear;
+    this.examType = examType;
+    this.className = className;
   }
 
   getSubject() {
@@ -74,6 +78,14 @@ export class Exam {
     this.subjectYear = subjectYear;
   }
 
+  getExamType() {
+    return this.examType;
+  }
+
+  getClassName() {
+    return this.className;
+  }
+
   toJSON() {
     return {
       subject: this.subject,
@@ -84,6 +96,8 @@ export class Exam {
       room: this.room,
       semester: this.semester,
       subjectYear: this.subjectYear,
+      examType: this.examType,
+      className: this.className,
     };
   }
 }

@@ -26,12 +26,13 @@ export class StudentService {
 
       // Try email field first with retry
       try {
-        const { data: emailData, error: emailError } = await retrySupabaseQuery(() =>
-          this.supabase
-            .from("users")
-            .select("id")
-            .eq("email", trimmedUsername)
-            .maybeSingle()
+        const { data: emailData, error: emailError } = await retrySupabaseQuery(
+          () =>
+            this.supabase
+              .from("users")
+              .select("id")
+              .eq("email", trimmedUsername)
+              .maybeSingle()
         );
 
         if (!emailError && emailData) {
@@ -47,13 +48,14 @@ export class StudentService {
       // Try user_id field as fallback with retry
       if (!userData) {
         try {
-          const { data: userIdData, error: userIdError } = await retrySupabaseQuery(() =>
-            this.supabase
-              .from("users")
-              .select("id")
-              .eq("user_id", trimmedUsername)
-              .maybeSingle()
-          );
+          const { data: userIdData, error: userIdError } =
+            await retrySupabaseQuery(() =>
+              this.supabase
+                .from("users")
+                .select("id")
+                .eq("user_id", trimmedUsername)
+                .maybeSingle()
+            );
 
           if (!userIdError && userIdData) {
             userData = userIdData;
@@ -61,7 +63,10 @@ export class StudentService {
             userError = userIdError;
           }
         } catch (networkError) {
-          console.error("Network error fetching user by user_id:", networkError);
+          console.error(
+            "Network error fetching user by user_id:",
+            networkError
+          );
           if (!userError) {
             userError = networkError;
           }
@@ -71,8 +76,13 @@ export class StudentService {
       if (userError || !userData) {
         // Check if it's a network error
         const errorMessage = userError?.message || String(userError || "");
-        if (errorMessage.includes("fetch failed") || errorMessage.includes("Network error")) {
-          throw new Error("Network error: Unable to connect to database. Please try again.");
+        if (
+          errorMessage.includes("fetch failed") ||
+          errorMessage.includes("Network error")
+        ) {
+          throw new Error(
+            "Network error: Unable to connect to database. Please try again."
+          );
         }
         console.error("Error fetching user:", userError);
         return null;
@@ -80,18 +90,24 @@ export class StudentService {
 
       // Then get student_id from students table with retry
       try {
-        const { data: studentData, error: studentError } = await retrySupabaseQuery(() =>
-          this.supabase
-            .from("students")
-            .select("id, student_id")
-            .eq("user_id", userData.id)
-            .maybeSingle()
-        );
+        const { data: studentData, error: studentError } =
+          await retrySupabaseQuery(() =>
+            this.supabase
+              .from("students")
+              .select("id, student_id")
+              .eq("user_id", userData.id)
+              .maybeSingle()
+          );
 
         if (studentError) {
           const errorMessage = studentError.message || String(studentError);
-          if (errorMessage.includes("fetch failed") || errorMessage.includes("Network error")) {
-            throw new Error("Network error: Unable to connect to database. Please try again.");
+          if (
+            errorMessage.includes("fetch failed") ||
+            errorMessage.includes("Network error")
+          ) {
+            throw new Error(
+              "Network error: Unable to connect to database. Please try again."
+            );
           }
           console.error("Error fetching student:", studentError);
           return null;
@@ -260,7 +276,13 @@ export class StudentService {
    * @param {number} year - Academic year (e.g., 2025)
    * @returns {Promise<Array>} Array of timetable entries
    */
-  async getStudentTimetable(studentId, semester, year, weekStart = null, weekEnd = null) {
+  async getStudentTimetable(
+    studentId,
+    semester,
+    year,
+    weekStart = null,
+    weekEnd = null
+  ) {
     const semesterAliases = this.getSemesterAliases(semester);
     // First get classes the student is enrolled in for this semester and year
     const { data: enrollmentsData, error: enrollmentsError } =
@@ -388,7 +410,9 @@ export class StudentService {
       .gte("exam_date", startStr)
       .lte("exam_date", endStr);
 
-    const examSet = new Set((exams || []).map((e) => `${e.class_id}-${e.exam_date}`));
+    const examSet = new Set(
+      (exams || []).map((e) => `${e.class_id}-${e.exam_date}`)
+    );
 
     const results = [];
     for (const entry of data || []) {
@@ -537,7 +561,8 @@ export class StudentService {
   async getStudentClasses(studentId) {
     const { data, error } = await this.supabase
       .from("enrollments")
-      .select(`
+      .select(
+        `
         class_id,
         classes:class_id (
           id,
@@ -550,7 +575,8 @@ export class StudentService {
             code
           )
         )
-      `)
+      `
+      )
       .eq("student_id", studentId);
 
     if (error) {
@@ -592,11 +618,13 @@ export class StudentService {
     // Get all attendance for this class
     const { data, error } = await this.supabase
       .from("attendance")
-      .select(`
+      .select(
+        `
         id,
         date,
         status
-      `)
+      `
+      )
       .eq("student_id", studentId)
       .eq("class_id", classId)
       .order("date", { ascending: true });
@@ -614,7 +642,7 @@ export class StudentService {
     for (let section = 1; section <= 15; section++) {
       attendanceBySection[section] = {
         status: null, // null means no attendance recorded
-        records: []
+        records: [],
       };
     }
 
@@ -643,10 +671,10 @@ export class StudentService {
       if (records.length === 0) {
         attendanceBySection[section].status = null; // No attendance recorded
       } else {
-        const hasPresent = records.some(r => r.status === "present");
-        const hasLate = records.some(r => r.status === "late");
-        const allAbsent = records.every(r => r.status === "absent");
-        
+        const hasPresent = records.some((r) => r.status === "present");
+        const hasLate = records.some((r) => r.status === "late");
+        const allAbsent = records.every((r) => r.status === "absent");
+
         if (allAbsent) {
           attendanceBySection[section].status = "absent";
         } else if (hasLate) {
@@ -684,12 +712,14 @@ export class StudentService {
       // Get class info even if no exams
       const { data: classData } = await this.supabase
         .from("classes")
-        .select(`
+        .select(
+          `
           class_name,
           subjects:subject_id (
             name
           )
-        `)
+        `
+        )
         .eq("id", classId)
         .maybeSingle();
 
@@ -708,13 +738,15 @@ export class StudentService {
     // Get student scores for these exams
     const { data: scoresData, error: scoresError } = await this.supabase
       .from("student_scores")
-      .select(`
+      .select(
+        `
         exam_id,
         score,
         exams:exam_id (
           exam_type
         )
-      `)
+      `
+      )
       .eq("student_id", studentId)
       .in("exam_id", examIds);
 
@@ -726,12 +758,14 @@ export class StudentService {
     // Get class and subject info
     const { data: classData, error: classError } = await this.supabase
       .from("classes")
-      .select(`
+      .select(
+        `
         class_name,
         subjects:subject_id (
           name
         )
-      `)
+      `
+      )
       .eq("id", classId)
       .maybeSingle();
 
@@ -801,11 +835,19 @@ export class StudentService {
   }
 
   /**
-   * Get student exam schedule
+   * Get student exam schedule with optional filters
    * @param {string} studentId - Student UUID
+   * @param {Object} options
+   * @param {string|null} options.semester - Semester filter (e.g., "1", "Fall")
+   * @param {number|string|null} options.year - Year filter
+   * @param {string|null} options.examType - "midterm" | "final" (inclass ignored)
+   * @param {boolean} options.onlyUpcoming - If true, return exams from today forward
    * @returns {Promise<Array>} Array of exam records
    */
-  async getStudentExamSchedule(studentId) {
+  async getStudentExamSchedule(
+    studentId,
+    { semester = null, year = null, examType = null, onlyUpcoming = false } = {}
+  ) {
     // First get classes the student is enrolled in
     const { data: enrollmentsData, error: enrollmentsError } =
       await this.supabase
@@ -832,6 +874,12 @@ export class StudentService {
         id,
         exam_type,
         exam_date,
+        start_time,
+        end_time,
+        room_id,
+        rooms:room_id (
+          room_name
+        ),
         classes:class_id (
           id,
           class_name,
@@ -853,10 +901,40 @@ export class StudentService {
       throw error;
     }
 
-    return (data || []).map((exam) => ({
+    const todayIso = new Date().toISOString().split("T")[0];
+    const normalizedSemester = semester
+      ? this.getSemesterAliases(semester)
+      : null;
+
+    const filtered = (data || []).filter((exam) => {
+      // Only midterm/final when filter provided
+      if (examType && exam.exam_type !== examType) return false;
+      // Ignore inclass when a type is specified
+      if (!examType && exam.exam_type === "inclass") return false;
+
+      if (normalizedSemester) {
+        const examSem = exam.classes?.semester;
+        if (!normalizedSemester.includes(String(examSem))) return false;
+      }
+
+      if (year) {
+        if (String(exam.classes?.year) !== String(year)) return false;
+      }
+
+      if (onlyUpcoming && exam.exam_date < todayIso) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return filtered.map((exam) => ({
       id: exam.id,
       exam_type: exam.exam_type,
       exam_date: exam.exam_date,
+      start_time: exam.start_time || null,
+      end_time: exam.end_time || null,
+      room_name: exam.rooms?.room_name || null,
       class_name: exam.classes?.class_name || "Unknown Class",
       subject_name: exam.classes?.subjects?.name || "Unknown Subject",
       subject_code: exam.classes?.subjects?.code || "",
@@ -874,32 +952,47 @@ export class StudentService {
    * @param {boolean} isAnonymous - Whether feedback is anonymous
    * @returns {Promise<Object>} Created feedback record
    */
-  async submitFeedback(studentId, category, title, message, isAnonymous = false) {
+  async submitFeedback(
+    studentId,
+    category,
+    title,
+    message,
+    isAnonymous = false
+  ) {
     // Validate category
-    const validCategories = ['teacher', 'class', 'facility', 'suggestion', 'complaint', 'other'];
+    const validCategories = [
+      "teacher",
+      "class",
+      "facility",
+      "suggestion",
+      "complaint",
+      "other",
+    ];
     if (!validCategories.includes(category)) {
-      throw new Error(`Invalid category. Must be one of: ${validCategories.join(', ')}`);
+      throw new Error(
+        `Invalid category. Must be one of: ${validCategories.join(", ")}`
+      );
     }
 
-    if (!message || message.trim() === '') {
-      throw new Error('Message is required');
+    if (!message || message.trim() === "") {
+      throw new Error("Message is required");
     }
 
     const { data, error } = await this.supabase
-      .from('feedback')
+      .from("feedback")
       .insert({
         student_id: studentId,
         category: category,
         title: title || null,
         message: message.trim(),
         is_anonymous: isAnonymous,
-        status: 'pending',
+        status: "pending",
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error submitting feedback:', error);
+      console.error("Error submitting feedback:", error);
       throw error;
     }
 

@@ -26,8 +26,20 @@ export async function GET(request) {
       );
     }
 
-    // Get exam schedule
-    const exams = await studentService.getStudentExamSchedule(studentId);
+    // Parse filters from query params
+    const { searchParams } = new URL(request.url);
+    const semester = searchParams.get("semester");
+    const year = searchParams.get("year");
+    const examType = searchParams.get("examType");
+    const onlyUpcoming = searchParams.get("onlyUpcoming") === "true";
+
+    // Get exam schedule with filters
+    const exams = await studentService.getStudentExamSchedule(studentId, {
+      semester,
+      year: year || null,
+      examType: examType === "midterm" || examType === "final" ? examType : null,
+      onlyUpcoming,
+    });
 
     return NextResponse.json({
       success: true,
