@@ -14,6 +14,46 @@ export default function StudentAttendancePage() {
   const [loadingAttendance, setLoadingAttendance] = useState(false)
   const [semesterStartDate, setSemesterStartDate] = useState('2025-09-01')
 
+  // Helper: normalize semester label from backend to logical name
+  const normalizeSemesterLabel = (semester) => {
+    if (!semester) return ''
+    const s = semester.toString().trim().toLowerCase()
+    if (s === '1' || s === 'fall') return 'Fall'
+    if (s === '2' || s === 'spring') return 'Spring'
+    if (s === '3' || s === 'summer') return 'Summer'
+    return semester.toString()
+  }
+
+  // Helper: get semester start date from semester label/value + year
+  const getSemesterStartDate = (semester, year) => {
+    const semLabel = normalizeSemesterLabel(semester)
+    const y = parseInt(year, 10) || new Date().getFullYear()
+
+    if (semLabel === 'Fall') {
+      // Fall: first week of September
+      return new Date(y, 8, 1)
+    }
+    if (semLabel === 'Spring') {
+      // Spring: first week of January
+      return new Date(y, 0, 1)
+    }
+    if (semLabel === 'Summer') {
+      // Summer: first week of June
+      return new Date(y, 5, 1)
+    }
+
+    // Fallback: January 1
+    return new Date(y, 0, 1)
+  }
+
+  // Format date to YYYY-MM-DD
+  const formatDateToString = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
@@ -43,11 +83,23 @@ export default function StudentAttendancePage() {
       return
     }
 
+    // Find the selected class to get semester and year
+    const selectedClass = classes.find((c) => c.class_id === selectedClassId)
+    if (!selectedClass) {
+      setAttendanceByWeek({})
+      return
+    }
+
+    // Calculate semester start date based on selected class
+    const startDate = getSemesterStartDate(selectedClass.semester, selectedClass.year)
+    const startDateString = formatDateToString(startDate)
+    setSemesterStartDate(startDateString)
+
     const fetchAttendance = async () => {
       try {
         setLoadingAttendance(true)
         const response = await fetch(
-          `/api/student/attendance?classId=${selectedClassId}`
+          `/api/student/attendance?classId=${selectedClassId}&semesterStartDate=${startDateString}`
         )
         const data = await response.json()
 
@@ -66,7 +118,7 @@ export default function StudentAttendancePage() {
     }
 
     fetchAttendance()
-  }, [selectedClassId])
+  }, [selectedClassId, classes])
 
   const getStatusIcon = (status) => {
     switch (status) {

@@ -634,8 +634,55 @@ export class StudentService {
       throw error;
     }
 
-    // Calculate section (week) for each attendance record
-    const startDate = new Date(semesterStartDate);
+    // If no attendance records, return empty sections
+    if (!data || data.length === 0) {
+      const attendanceBySection = {};
+      for (let section = 1; section <= 15; section++) {
+        attendanceBySection[section] = {
+          status: null,
+          records: [],
+        };
+      }
+      return attendanceBySection;
+    }
+
+    // Find the oldest date in the attendance records to use as week 1
+    let oldestDate = null;
+    const normalizedDates = [];
+
+    // First pass: normalize all dates and find the oldest
+    (data || []).forEach((record) => {
+      // Normalize record date to avoid timezone issues
+      let recordDateStr;
+      if (typeof record.date === "string") {
+        recordDateStr = record.date.split("T")[0]; // Get YYYY-MM-DD part only
+      } else if (record.date instanceof Date) {
+        recordDateStr = record.date.toISOString().split("T")[0];
+      } else {
+        console.warn("Unexpected date format:", record.date);
+        return; // Skip this record
+      }
+
+      const [recordYear, recordMonth, recordDay] = recordDateStr
+        .split("-")
+        .map(Number);
+      const recordDate = new Date(recordYear, recordMonth - 1, recordDay);
+      recordDate.setHours(0, 0, 0, 0); // Normalize to start of day
+
+      normalizedDates.push({
+        originalRecord: record,
+        date: recordDate,
+        dateStr: recordDateStr,
+      });
+
+      // Track the oldest date
+      if (!oldestDate || recordDate < oldestDate) {
+        oldestDate = recordDate;
+      }
+    });
+
+    // Use the oldest date as week 1 start date
+    const startDate = oldestDate;
     const attendanceBySection = {};
 
     // Initialize sections 1-15 with default status
@@ -646,18 +693,18 @@ export class StudentService {
       };
     }
 
-    // Group attendance by section (week)
-    (data || []).forEach((record) => {
-      const recordDate = new Date(record.date);
+    // Group attendance by section (week) relative to oldest date
+    normalizedDates.forEach(({ originalRecord, date: recordDate, dateStr }) => {
       const diffTime = recordDate - startDate;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       const section = Math.floor(diffDays / 7) + 1;
 
+      // Allow any positive section (no upper limit check since data might span more than 15 weeks)
       if (section >= 1 && section <= 15) {
         attendanceBySection[section].records.push({
-          id: record.id,
-          date: record.date,
-          status: record.status,
+          id: originalRecord.id,
+          date: originalRecord.date,
+          status: originalRecord.status,
         });
       }
     });
