@@ -94,7 +94,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-roboto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -120,7 +120,9 @@ export default function StudentDashboard() {
             <div className={`text-3xl font-bold ${getGpaColor(gpa)}`}>
               {gpa.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Out of 4.0 scale</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Out of 4.0 scale
+            </p>
           </CardContent>
         </Card>
 
@@ -134,10 +136,16 @@ export default function StudentDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${getAttendanceColor(attendanceRate)}`}>
+            <div
+              className={`text-3xl font-bold ${getAttendanceColor(
+                attendanceRate
+              )}`}
+            >
               {attendanceRate.toFixed(0)}%
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Overall attendance</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Overall attendance
+            </p>
           </CardContent>
         </Card>
 
@@ -166,7 +174,13 @@ export default function StudentDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${unpaidFeesCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+            <div
+              className={`text-3xl font-bold ${
+                unpaidFeesCount > 0
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-green-600 dark:text-green-400"
+              }`}
+            >
               {unpaidFeesCount}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -196,7 +210,8 @@ export default function StudentDashboard() {
                     <div className="flex-1">
                       <p className="font-medium">{exam.className}</p>
                       <p className="text-sm text-muted-foreground">
-                        {exam.examType?.toUpperCase() || "Exam"} • {formatDate(exam.examDate)}
+                        {exam.examType?.toUpperCase() || "Exam"} •{" "}
+                        {formatDate(exam.examDate)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -237,17 +252,23 @@ export default function StudentDashboard() {
                     <div className="flex-1">
                       <p className="font-medium">{score.className}</p>
                       <p className="text-sm text-muted-foreground">
-                        {score.examType?.toUpperCase() || "Exam"} • {formatDate(score.examDate)}
+                        {score.examType?.toUpperCase() || "Exam"} •{" "}
+                        {formatDate(score.examDate)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className={`text-2xl font-bold ${
-                        score.score >= 90 ? 'text-green-600 dark:text-green-400' :
-                        score.score >= 75 ? 'text-blue-600 dark:text-blue-400' :
-                        score.score >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                        'text-red-600 dark:text-red-400'
-                      }`}>
-                        {score.score || 'N/A'}
+                      <div
+                        className={`text-2xl font-bold ${
+                          score.score >= 90
+                            ? "text-green-600 dark:text-green-400"
+                            : score.score >= 75
+                            ? "text-blue-600 dark:text-blue-400"
+                            : score.score >= 60
+                            ? "text-yellow-600 dark:text-yellow-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {score.score || "N/A"}
                       </div>
                     </div>
                   </div>
@@ -310,4 +331,3 @@ export default function StudentDashboard() {
     </div>
   );
 }
-

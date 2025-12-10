@@ -1,26 +1,34 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { MessageSquare, Send, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { MessageSquare, Send, AlertCircle } from 'lucide-react'
+import { toast, ToastContainer } from 'react-toastify'
 
 export default function StudentFeedbackPage() {
-  const [category, setCategory] = useState('other');
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState('other')
+  const [title, setTitle] = useState('')
+  const [message, setMessage] = useState('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('darkMode') === 'true'
+    }
+    return false
+  })
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    toast.loading('Submitting feedback...')
 
     try {
       const response = await fetch('/api/student/feedback', {
@@ -32,59 +40,52 @@ export default function StudentFeedbackPage() {
           message: message.trim(),
           isAnonymous,
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
+      toast.dismiss()
       if (data.success) {
-        setSubmitted(true);
-        setCategory('other');
-        setTitle('');
-        setMessage('');
-        setIsAnonymous(false);
-        setTimeout(() => setSubmitted(false), 5000);
+        setSubmitted(true)
+        setCategory('other')
+        setTitle('')
+        setMessage('')
+        setIsAnonymous(false)
+        setTimeout(() => setSubmitted(false), 5000)
+        toast.success('Feedback submitted successfully!')
       } else {
-        setError(data.error || 'Failed to submit feedback. Please try again.');
+        setError(data.error || 'Failed to submit feedback. Please try again.')
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
-      setError('An error occurred. Please try again.');
+      console.error('Error submitting feedback:', error)
+      setError('An error occurred. Please try again.')
+      toast.error('An error occurred. Please try again.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  useEffect(() => {
+    setDarkMode(localStorage.getItem('darkMode') === 'true')
+  }, [localStorage.getItem('darkMode')])
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Feedback</h1>
+    <div className="space-y-6 font-roboto">
+      <h1 className="text-2xl font-bold">Feedback</h1>
+      <ToastContainer theme={darkMode ? 'light' : 'dark'} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <MessageSquare className="w-5 h-5" />
-            <span>Submit Feedback</span>
-          </CardTitle>
-        </CardHeader>
+      <Card className="pt-4">
         <CardContent>
-          {submitted && (
-            <div className="mb-4 p-3 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-md">
-              Feedback submitted successfully! We appreciate your input.
-            </div>
-          )}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-md flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{error}</span>
-            </div>
-          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category" className="text-sm">
+                Category
+              </Label>
               <select
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
-                className="w-full px-3 py-2 border rounded-md bg-background"
+                className="w-full px-3 py-2 border rounded-md bg-background text-sm"
               >
                 <option value="teacher">Teacher</option>
                 <option value="class">Class</option>
@@ -95,16 +96,21 @@ export default function StudentFeedbackPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="title">Title (Optional)</Label>
+              <Label htmlFor="title" className="text-sm">
+                Title (Optional)
+              </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter a brief title for your feedback"
+                className="text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="message">Message *</Label>
+              <Label htmlFor="message" className="text-sm">
+                Message
+              </Label>
               <Textarea
                 id="message"
                 value={message}
@@ -112,7 +118,7 @@ export default function StudentFeedbackPage() {
                 required
                 rows={6}
                 placeholder="Enter your feedback message"
-                className="resize-none"
+                className="resize-none text-sm"
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -123,17 +129,17 @@ export default function StudentFeedbackPage() {
                 onChange={(e) => setIsAnonymous(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300"
               />
-              <Label htmlFor="isAnonymous" className="cursor-pointer">
+              <Label htmlFor="isAnonymous" className="cursor-pointer text-sm">
                 Submit anonymously
               </Label>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full text-sm" disabled={loading}>
               <Send className="w-4 h-4 mr-2" />
-              {loading ? 'Submitting...' : 'Submit Feedback'}
+              {loading ? 'Submitting...' : 'Submit'}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

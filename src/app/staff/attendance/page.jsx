@@ -241,26 +241,28 @@ export default function StaffAttendancePage() {
   }
 
   return (
-    <div className="space-y-6 font-roboto">
+    <div className="font-roboto space-y-4">
+      <h1 className="text-2xl font-bold">Manage Attendance</h1>
       <ToastContainer theme={darkMode ? 'light' : 'dark'} />
-      <h1 className="text-3xl font-bold">Manage Attendance</h1>
 
       {/* Class Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Select Class</CardTitle>
+          <CardTitle className="text-lg font-semibold">Select Class</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="classSelect">Class</Label>
+              <Label htmlFor="classSelect" className="text-sm">
+                Class
+              </Label>
               <select
                 id="classSelect"
                 value={selectedClass?.id || ''}
                 onChange={(e) => {
                   handleSelectClass(e.target.value)
                 }}
-                className="w-full px-3 py-2 border rounded-md bg-background cursor-pointer"
+                className="w-full px-3 py-2 border rounded-md bg-background cursor-pointer text-sm"
               >
                 <option value="">-- Select a class --</option>
                 {classes.map((cls) => (
@@ -278,7 +280,7 @@ export default function StaffAttendancePage() {
       {selectedClass && (
         <Card>
           <CardHeader>
-            <CardTitle>Select Week</CardTitle>
+            <CardTitle className="text-lg font-semibold">Select Week</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-5 gap-2">
@@ -289,7 +291,7 @@ export default function StaffAttendancePage() {
                   onClick={() => setSelectedSection(section)}
                   className="w-full cursor-pointer"
                 >
-                  Week {section}
+                  <span className="text-sm">Week {section}</span>
                 </Button>
               ))}
             </div>
@@ -301,7 +303,7 @@ export default function StaffAttendancePage() {
       {selectedClass && selectedSection && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className="flex items-center justify-between text-lg font-semibold">
               <span>
                 Attendance for {selectedClass.class_name} - Week{' '}
                 {selectedSection}
@@ -310,7 +312,7 @@ export default function StaffAttendancePage() {
                 onClick={handleSaveAttendance}
                 disabled={saving || loadingStudents}
               >
-                {saving ? 'Saving...' : 'Save Attendance'}
+                {saving ? 'Saving...' : 'Save'}
               </Button>
             </CardTitle>
           </CardHeader>
