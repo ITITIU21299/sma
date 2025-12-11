@@ -43,6 +43,10 @@ export default function StaffSalaryPage() {
     fetchSalaries()
   }, [])
 
+  const formatMoney = (amount) => {
+    return Number(amount).toLocaleString('vi-VN').replace(/,/g, '.')
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center">
@@ -81,7 +85,7 @@ export default function StaffSalaryPage() {
                   <p className="text-sm text-muted-foreground">Amount</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-lg font-semibold">
-                      {Number(salary.getAmount())} VND
+                      {formatMoney(salary.getAmount())} VND
                     </p>
                   </div>
                 </div>

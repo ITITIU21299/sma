@@ -111,7 +111,7 @@ export async function GET(request) {
       // Get recent salary status
       const { data: salaryData } = await supabase
         .from("staff_salary")
-        .select("id, month_year, status, base_salary")
+        .select("id, month_year, status, base_salary, bonus")
         .eq("staff_id", staffId)
         .order("month_year", { ascending: false })
         .limit(1);
@@ -120,7 +120,35 @@ export async function GET(request) {
         monthYear: salaryData[0].month_year,
         status: salaryData[0].status,
         baseSalary: salaryData[0].base_salary,
+        bonus: salaryData[0].bonus || 0,
+        totalSalary: parseFloat(salaryData[0].base_salary) + parseFloat(salaryData[0].bonus || 0),
       } : null;
+
+      // Calculate weekly teaching hours from timetable
+      let weeklyTeachingHours = 0;
+      if (classesData && classesData.length > 0) {
+        const classIds = classesData.map((c) => c.id);
+        const { data: timetableData } = await supabase
+          .from("timetable")
+          .select("start_time, end_time")
+          .in("class_id", classIds)
+          .eq("staff_id", staffId);
+
+        if (timetableData && timetableData.length > 0) {
+          // Calculate total hours per week
+          timetableData.forEach((entry) => {
+            if (entry.start_time && entry.end_time) {
+              const start = new Date(`2000-01-01T${entry.start_time}`);
+              const end = new Date(`2000-01-01T${entry.end_time}`);
+              const diffMs = end - start;
+              const diffHours = diffMs / (1000 * 60 * 60); // Convert to hours
+              weeklyTeachingHours += diffHours;
+            }
+          });
+          // Round to 1 decimal place
+          weeklyTeachingHours = Math.round(weeklyTeachingHours * 10) / 10;
+        }
+      }
 
       return NextResponse.json({
         success: true,
@@ -129,6 +157,7 @@ export async function GET(request) {
         currentSemester,
         upcomingExams,
         latestSalary,
+        weeklyTeachingHours,
       });
     } catch (error) {
       return handleApiError(error, "staff dashboard stats");

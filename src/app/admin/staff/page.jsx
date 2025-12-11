@@ -499,9 +499,12 @@ export default function AdminStaffPage() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-medium text-lg">
-                                    {Number(salary.base_salary)}{' '}
-                                    {salary.bonus > 0 &&
-                                      `+ ${Number(salary.bonus)} VND bonus`}
+                                    {Number(salary.base_salary) + Number(salary.bonus || 0)} VND
+                                    {salary.bonus > 0 && (
+                                      <span className="text-sm text-muted-foreground ml-2">
+                                        (Base: {Number(salary.base_salary)} + Bonus: {Number(salary.bonus)})
+                                      </span>
+                                    )}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
                                     {formatDate(salary.month_year)}

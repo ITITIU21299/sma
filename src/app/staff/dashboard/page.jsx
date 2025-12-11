@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, GraduationCap, Calendar, ClipboardList, DollarSign, Home } from 'lucide-react';
+import {
+  Users,
+  GraduationCap,
+  Calendar,
+  DollarSign,
+  Home,
+  Clock,
+} from 'lucide-react';
 import { ThreeDots } from 'react-loader-spinner';
 import Link from 'next/link';
 
@@ -10,7 +17,7 @@ export default function StaffDashboard() {
   const [staff, setStaff] = useState(null);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
-  const [upcomingExams, setUpcomingExams] = useState([]);
+  const [weeklyTeachingHours, setWeeklyTeachingHours] = useState(0);
   const [latestSalary, setLatestSalary] = useState(null);
   const [currentSemester, setCurrentSemester] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +31,7 @@ export default function StaffDashboard() {
         setStaff({ name: data.staff?.full_name || 'Staff' });
         setTotalStudents(data.stats?.totalStudents || 0);
         setTotalClasses(data.stats?.totalClasses || 0);
-        setUpcomingExams(data.upcomingExams || []);
+        setWeeklyTeachingHours(data.weeklyTeachingHours || 0);
         setLatestSalary(data.latestSalary);
         setCurrentSemester(data.currentSemester);
       } else {
@@ -40,16 +47,6 @@ export default function StaffDashboard() {
   useEffect(() => {
     fetchData();
   }, []);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   const formatMonthYear = (dateString) => {
     if (!dateString) return 'N/A';
@@ -106,7 +103,9 @@ export default function StaffDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalStudents}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total enrolled students</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total enrolled students
+            </p>
           </CardContent>
         </Card>
 
@@ -121,22 +120,24 @@ export default function StaffDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{totalClasses}</div>
-            <p className="text-xs text-muted-foreground mt-1">Classes you're teaching</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Classes you&apos;re teaching
+            </p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Upcoming Exams
+              Weekly Teaching Hours
             </CardTitle>
             <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900">
-              <Calendar className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{upcomingExams.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Exams scheduled</p>
+            <div className="text-3xl font-bold">{weeklyTeachingHours}</div>
+            <p className="text-xs text-muted-foreground mt-1">Hours per week</p>
           </CardContent>
         </Card>
 
@@ -153,66 +154,42 @@ export default function StaffDashboard() {
             {latestSalary ? (
               <>
                 <div className="text-2xl font-bold">
-                  {latestSalary.status ? (
-                    <span className="text-green-600 dark:text-green-400">Paid</span>
-                  ) : (
-                    <span className="text-red-600 dark:text-red-400">Pending</span>
-                  )}
+                  {latestSalary.totalSalary
+                    ? `${Number(latestSalary.totalSalary)
+                        .toLocaleString('vi-VN')
+                        .replace(/,/g, '.')} VND`
+                    : latestSalary.baseSalary
+                    ? `${Number(latestSalary.baseSalary)
+                        .toLocaleString('vi-VN')
+                        .replace(/,/g, '.')} VND`
+                    : 'N/A'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatMonthYear(latestSalary.monthYear)}
+                  {latestSalary.status ? (
+                    <span className="ml-2 text-green-600 dark:text-green-400">
+                      • Paid
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-red-600 dark:text-red-400">
+                      • Pending
+                    </span>
+                  )}
                 </p>
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold text-muted-foreground">N/A</div>
-                <p className="text-xs text-muted-foreground mt-1">No salary records</p>
+                <div className="text-2xl font-bold text-muted-foreground">
+                  N/A
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No salary records
+                </p>
               </>
             )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Upcoming Exams */}
-      {upcomingExams.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="w-5 h-5" />
-              Upcoming Exams
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {upcomingExams.map((exam) => (
-                <div
-                  key={exam.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{exam.className}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {exam.examType?.toUpperCase() || 'Exam'} • {formatDate(exam.examDate)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-sm font-medium">
-                      {formatDate(exam.examDate)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4">
-              <Link href="/staff/schedule">
-                <button className="text-sm text-primary hover:underline">
-                  View full schedule →
-                </button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Quick Actions */}
       <Card>
