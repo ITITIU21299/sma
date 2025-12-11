@@ -7,6 +7,34 @@ export class AttendanceService {
   }
 
   /**
+   * Get timetable entries for a class
+   * @param {string} classId - Class UUID
+   * @returns {Promise<Array>} Array of timetable entries
+   */
+  async getClassTimetable(classId) {
+    const { data, error } = await this.supabase
+      .from("timetable")
+      .select(`
+        id,
+        day_of_week,
+        start_time,
+        end_time,
+        class_id,
+        room_id
+      `)
+      .eq("class_id", classId)
+      .order("day_of_week", { ascending: true })
+      .order("start_time", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching class timetable:", error);
+      throw error;
+    }
+
+    return data || [];
+  }
+
+  /**
    * Get students enrolled in a class
    * @param {string} classId - Class UUID
    * @returns {Promise<Array>} Array of enrolled students
@@ -83,10 +111,23 @@ export class AttendanceService {
    */
   async getClassAttendanceBySection(classId, section, semesterStartDate) {
     const startDate = new Date(semesterStartDate);
-    const sectionStartDate = new Date(startDate);
-    sectionStartDate.setDate(startDate.getDate() + (section - 1) * 7);
-    const sectionEndDate = new Date(sectionStartDate);
-    sectionEndDate.setDate(sectionStartDate.getDate() + 6);
+    startDate.setHours(0, 0, 0, 0);
+    
+    // Find the Monday of the week containing the semester start date
+    // JavaScript getDay(): 0=Sunday, 1=Monday, ..., 6=Saturday
+    const startDayOfWeek = startDate.getDay(); // 0-6, where 0=Sunday, 1=Monday
+    const daysToMonday = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+    const semesterMonday = new Date(startDate);
+    semesterMonday.setDate(startDate.getDate() - daysToMonday);
+    semesterMonday.setHours(0, 0, 0, 0);
+    
+    // Calculate the Monday of the target week (week 1 = semester Monday)
+    const weekMonday = new Date(semesterMonday);
+    weekMonday.setDate(semesterMonday.getDate() + (section - 1) * 7);
+    
+    const sectionStartDate = new Date(weekMonday);
+    const sectionEndDate = new Date(weekMonday);
+    sectionEndDate.setDate(weekMonday.getDate() + 6);
 
     const startDateStr = sectionStartDate.toISOString().split("T")[0];
     const endDateStr = sectionEndDate.toISOString().split("T")[0];
@@ -218,62 +259,40 @@ export class AttendanceService {
 
   /**
    * Mark attendance for multiple students at once
+   * Uses upsert to update existing records or insert new ones
    * @param {string} classId - Class UUID
    * @param {Array} attendanceData - Array of {student_id, status}
    * @param {string} date - Date in YYYY-MM-DD format
    * @param {string} staffId - Staff UUID who is marking attendance
-   * @param {number} section - Optional section number (1-15)
-   * @param {string} semesterStartDate - Optional semester start date for section-based deletion
+   * @param {number} section - Optional section number (1-15) - kept for backward compatibility
+   * @param {string} semesterStartDate - Optional semester start date - kept for backward compatibility
    * @returns {Promise<Array>} Array of created/updated attendance records
    */
   async markBulkAttendance(classId, attendanceData, date, staffId, section = null, semesterStartDate = null) {
-    const records = attendanceData.map((item) => ({
-      class_id: classId,
-      student_id: item.student_id,
-      date,
-      status: item.status,
-      marked_by: staffId,
-    }));
+    // Use upsert to update existing records or insert new ones
+    // Process each record individually to ensure proper error handling
+    // This approach is more reliable than bulk upsert for handling updates
+    const results = await Promise.all(
+      attendanceData.map(async (item) => {
+        try {
+          return await this.markAttendance(
+            classId,
+            item.student_id,
+            date,
+            item.status,
+            staffId
+          );
+        } catch (error) {
+          console.error(
+            `Error marking attendance for student ${item.student_id}:`,
+            error
+          );
+          throw error;
+        }
+      })
+    );
 
-    // If section is provided, delete all records for that section (week)
-    if (section && semesterStartDate) {
-      const startDate = new Date(semesterStartDate);
-      const sectionStartDate = new Date(startDate);
-      sectionStartDate.setDate(startDate.getDate() + (section - 1) * 7);
-      const sectionEndDate = new Date(sectionStartDate);
-      sectionEndDate.setDate(sectionStartDate.getDate() + 6);
-
-      const startDateStr = sectionStartDate.toISOString().split("T")[0];
-      const endDateStr = sectionEndDate.toISOString().split("T")[0];
-
-      // Delete existing records for this class and section
-      await this.supabase
-        .from("attendance")
-        .delete()
-        .eq("class_id", classId)
-        .gte("date", startDateStr)
-        .lte("date", endDateStr);
-    } else {
-      // Delete existing records for this class and date
-      await this.supabase
-        .from("attendance")
-        .delete()
-        .eq("class_id", classId)
-        .eq("date", date);
-    }
-
-    // Then insert new records
-    const { data, error } = await this.supabase
-      .from("attendance")
-      .insert(records)
-      .select();
-
-    if (error) {
-      console.error("Error creating bulk attendance:", error);
-      throw error;
-    }
-
-    return data || [];
+    return results;
   }
 }
 

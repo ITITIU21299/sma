@@ -38,6 +38,13 @@ export async function GET(request) {
         students,
         attendance,
       });
+    } else if (classId && searchParams.get("timetable") === "true") {
+      // Get timetable for a class
+      const timetable = await attendanceService.getClassTimetable(classId);
+      return NextResponse.json({
+        success: true,
+        timetable,
+      });
     } else if (classId && date) {
       // Get attendance for a specific class and date (backward compatibility)
       const attendance = await attendanceService.getClassAttendance(
