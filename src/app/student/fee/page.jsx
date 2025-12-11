@@ -10,6 +10,11 @@ export default function StudentFeePage() {
   const [fees, setFees] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const formatMoney = (amount) =>
+    Number(amount || 0)
+      .toLocaleString('vi-VN')
+      .replace(/,/g, '.')
+
   useEffect(() => {
     const fetchFees = async () => {
       try {
@@ -84,7 +89,7 @@ export default function StudentFeePage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Amount</p>
                   <p className="text-lg font-semibold">
-                    {Number(fee.getAmount())} VND
+                    {formatMoney(fee.getAmount())} VND
                   </p>
                 </div>
                 <div>

@@ -103,6 +103,11 @@ export default function AdminStaffPage() {
     })
   }
 
+  const formatMoney = (amount) =>
+    Number(amount || 0)
+      .toLocaleString('vi-VN')
+      .replace(/,/g, '.')
+
   const handleStaffSave = async () => {
     if (!staffDetails?.userId) {
       alert('Missing user id for this staff')
@@ -499,10 +504,14 @@ export default function AdminStaffPage() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-medium text-lg">
-                                    {Number(salary.base_salary) + Number(salary.bonus || 0)} VND
+                                    {formatMoney(
+                                      Number(salary.base_salary) + Number(salary.bonus || 0)
+                                    )}{' '}
+                                    VND
                                     {salary.bonus > 0 && (
                                       <span className="text-sm text-muted-foreground ml-2">
-                                        (Base: {Number(salary.base_salary)} + Bonus: {Number(salary.bonus)})
+                                        (Base: {formatMoney(Number(salary.base_salary))} + Bonus:{' '}
+                                        {formatMoney(Number(salary.bonus))})
                                       </span>
                                     )}
                                   </p>

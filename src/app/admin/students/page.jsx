@@ -119,6 +119,11 @@ export default function AdminStudentsPage() {
     })
   }
 
+  const formatMoney = (amount) =>
+    Number(amount || 0)
+      .toLocaleString('vi-VN')
+      .replace(/,/g, '.')
+
   const handleStudentSave = async () => {
     if (!studentDetails?.userId) {
       alert('Missing user id for this student')
@@ -510,7 +515,7 @@ export default function AdminStudentsPage() {
                               <div className="flex items-center justify-between">
                                 <div>
                                   <p className="font-medium">
-                                    {Number(fee.amount)} VND
+                                    {formatMoney(fee.amount)} VND
                                   </p>
                                   <p className="text-sm text-muted-foreground">
                                     Due: {formatDate(fee.due_date)}
